@@ -141,7 +141,7 @@ public class FBOExample {
             glClearColor(1.0f, 0.0f, 0.0f, 0.5f);
             glClear(GL_COLOR_BUFFER_BIT /*| GL_DEPTH_BUFFER_BIT*/);			// Clear Screen And Depth Buffer on the fbo to red
             glLoadIdentity();												// Reset The Modelview Matrix
-            glTranslatef(0.0f, 0.0f, -12.0f);								// Translate 6 Units Into The Screen and then rotate
+            glTranslatef(-1.0f, 0.0f, -5.0f);								// Translate 6 Units Into The Screen and then rotate
             glRotatef(angle, 0.0f, 1.0f, 0.0f);
             glRotatef(angle, 1.0f, 0.0f, 0.0f);
             glRotatef(angle, 0.0f, 0.0f, 1.0f);

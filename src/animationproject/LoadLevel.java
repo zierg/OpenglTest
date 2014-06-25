@@ -27,8 +27,8 @@ import org.newdawn.slick.util.ResourceLoader;
  */
 public class LoadLevel {
 
-    private final static int width = 512;
-    private final static int height = 512;
+    private final static int width = 800;
+    private final static int height = 600;
     private static Texture groundsTexture;
     private static Ground[] grounds;
     private static int levelTextureID;
@@ -119,10 +119,9 @@ public class LoadLevel {
 
         glEnable(GL_TEXTURE_2D);
         glColor3f(1, 1, 1);
-        //glBegin(GL_QUADS);
 
         glBindTexture(GL_TEXTURE_2D, groundsTexture.getTextureID());
-        glViewport(0, 0, levelWidth, levelHeight);
+        glViewport(0, 0, width, height);
         
         int i = 0;
         int j = 0;
@@ -136,58 +135,41 @@ public class LoadLevel {
             j = 0;
         }
 
-        //glEnd();
         glDisable(GL_QUADS);
         glBindTexture(GL_TEXTURE_2D, 0);
         glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
     }
 
     private static void drawGround(Ground ground, float x, float y) {
-        //texture.bind();
-        //glViewport(0, 0, width, height);
         final int a = groundsTexture.getImageHeight() / 64;
         final float varX = 1f / a;
         final float varY = 1f / a;
 
         int textureWidth = groundsTexture.getTextureWidth();
         int textureHeight = groundsTexture.getTextureHeight();
-        System.out.println("textureWidth = " + textureWidth);
-        System.out.println("textureHeight = " + textureHeight);
-
         
         float row = varX * (ground.col - 1);
         float col = varY * (ground.row - 1);
+        float ww = textureWidth/a;
+        float hh = textureHeight/a;
         
-        float ccol = x/64;
-        
-        System.out.println("ccol=" + ccol);
-        float ww = width/5.0f;
-        System.out.println("ww = " + ww);
-        System.out.println("x = " + x);
-        x+=38.3f*ccol;
-        System.out.println("x+x*ww = " + x);
-        float wScale = width/levelWidth;
-        float hScale = levelHeight/height;
-
         glBegin(GL_QUADS);
         {
             glTexCoord2f(row, col);
-            glVertex2f(x, levelHeight-y);
+            glVertex2f(x, height-y);
             glTexCoord2f(row + varX, col);
-            glVertex2f((x + ww), levelHeight-y);
+            glVertex2f((x + ww), height-y);
             glTexCoord2f(row + varX, col + varY);
-            glVertex2f((x + ww), levelHeight-(y + textureHeight / a));
+            glVertex2f((x + ww), height-(y + hh));
             glTexCoord2f(row, col + varY);
-            glVertex2f(x, levelHeight-(y + textureHeight / a));
+            glVertex2f(x, height-(y + hh));
         }
         glEnd();
     }
     
     private static void render() {
-        //glViewport(0, 0, width, height);									// set The Current Viewport to the fbo size
         glEnable(GL_TEXTURE_2D);		
-        //glBindTexture(GL_TEXTURE_2D, 0);// enable texturing
-        //glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);					// switch to rendering on the framebuffer
+
 
         glClearColor(0.0f, 0.0f, 0.0f, 0.5f);
         glClear(GL_COLOR_BUFFER_BIT );			// Clear Screen And Depth Buffer on the framebuffer to black
@@ -199,17 +181,18 @@ public class LoadLevel {
         glLoadIdentity();												// Reset The Modelview Matrix
         
         glColor3f(1, 1, 1);												// set the color to white
-        //glTranslatef(-10.0f, -10.0f, 10.0f);								// Translate 6 Units Into The Screen and then rotate
+        float x = width/2-levelWidth/2;
+        float y = height/2-levelHeight/2;
         glBegin(GL_QUADS);
         {
             glTexCoord2f(0, 0);
-            glVertex2f(0, 0);
+            glVertex2f(x, y);
             glTexCoord2f(1, 0);
-            glVertex2f(levelWidth, 0);
+            glVertex2f(x+levelWidth, y);
             glTexCoord2f(1, 1);
-            glVertex2f(levelWidth, levelHeight);
+            glVertex2f(x+levelWidth, y+levelHeight);
             glTexCoord2f(0, 1);
-            glVertex2f(0, levelHeight);
+            glVertex2f(x, y+levelHeight);
         }
         glEnd();
 

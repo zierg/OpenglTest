@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<level id="1">
+  <grounds>
+    <row>
+      <int>12</int>
+      <int>13</int>
+      <int>2</int>
+      <int>15</int>
+      <int>1</int>
+    </row>
+    <row>
+      <int>10</int>
+      <int>6</int>
+      <int>9</int>
+      <int>1</int>
+      <int>2</int>
+    </row>
+    <row>
+      <int>14</int>
+      <int>13</int>
+      <int>13</int>
+      <int>9</int>
+      <int>12</int>
+    </row>
+    <row>
+      <int>10</int>
+      <int>13</int>
+      <int>12</int>
+      <int>9</int>
+      <int>4</int>
+    </row>
+    <row>
+      <int>8</int>
+      <int>5</int>
+      <int>8</int>
+      <int>11</int>
+      <int>1</int>
+    </row>
+  </grounds>
+</level>

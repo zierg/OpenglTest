@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<Grounds>
+  <ground id="0">
+    <imageFile>gr\img\default.png</imageFile>
+    <soundFile>gr\snd\default.wav</soundFile>
+    <row>0</row>
+    <col>0</col>
+  </ground>
+  <ground id="1">
+    <imageFile>gr\img\default.png</imageFile>
+    <soundFile>gr\snd\default.wav</soundFile>
+    <row>0</row>
+    <col>1</col>
+  </ground>
+  <ground id="2">
+    <imageFile>gr\img\default.png</imageFile>
+    <soundFile>gr\snd\default.wav</soundFile>
+    <row>0</row>
+    <col>2</col>
+  </ground>
+  <ground id="3">
+    <imageFile>gr\img\default.png</imageFile>
+    <soundFile>gr\snd\default.wav</soundFile>
+    <row>0</row>
+    <col>3</col>
+  </ground>
+  <ground id="4">
+    <imageFile>gr\img\default.png</imageFile>
+    <soundFile>gr\snd\default.wav</soundFile>
+    <row>1</row>
+    <col>0</col>
+  </ground>
+  <ground id="5">
+    <imageFile>gr\img\default.png</imageFile>
+    <soundFile>gr\snd\default.wav</soundFile>
+    <row>1</row>
+    <col>1</col>
+  </ground>
+  <ground id="6">
+    <imageFile>gr\img\default.png</imageFile>
+    <soundFile>gr\snd\default.wav</soundFile>
+    <row>1</row>
+    <col>2</col>
+  </ground>
+  <ground id="7">
+    <imageFile>gr\img\default.png</imageFile>
+    <soundFile>gr\snd\default.wav</soundFile>
+    <row>1</row>
+    <col>3</col>
+  </ground>
+  <ground id="8">
+    <imageFile>gr\img\default.png</imageFile>
+    <soundFile>gr\snd\default.wav</soundFile>
+    <row>2</row>
+    <col>0</col>
+  </ground>
+  <ground id="9">
+    <imageFile>gr\img\default.png</imageFile>
+    <soundFile>gr\snd\default.wav</soundFile>
+    <row>2</row>
+    <col>1</col>
+  </ground>
+  <ground id="10">
+    <imageFile>gr\img\default.png</imageFile>
+    <soundFile>gr\snd\default.wav</soundFile>
+    <row>2</row>
+    <col>2</col>
+  </ground>
+  <ground id="11">
+    <imageFile>gr\img\default.png</imageFile>
+    <soundFile>gr\snd\default.wav</soundFile>
+    <row>2</row>
+    <col>3</col>
+  </ground>
+  <ground id="12">
+    <imageFile>gr\img\default.png</imageFile>
+    <soundFile>gr\snd\default.wav</soundFile>
+    <row>3</row>
+    <col>0</col>
+  </ground>
+  <ground id="13">
+    <imageFile>gr\img\default.png</imageFile>
+    <soundFile>gr\snd\default.wav</soundFile>
+    <row>3</row>
+    <col>1</col>
+  </ground>
+  <ground id="14">
+    <imageFile>gr\img\default.png</imageFile>
+    <soundFile>gr\snd\default.wav</soundFile>
+    <row>3</row>
+    <col>2</col>
+  </ground>
+  <ground id="15">
+    <imageFile>gr\img\default.png</imageFile>
+    <soundFile>gr\snd\default.wav</soundFile>
+    <row>3</row>
+    <col>3</col>
+  </ground>
+</Grounds>

@@ -94,8 +94,16 @@ public class LoadLevel {
 
         if (Mouse.isButtonDown(0)) {
             if (!isLeftButtonPressed) {
-                System.out.println("x = " + x + ", y = " + y);
+                System.out.println("x = " + x + ", y = " + y); // Вывод координат
                 isLeftButtonPressed = true;
+                
+                // Вывод столбца и строки нажатой ячейки (только в том случае, когда клик был внутри уровня)
+                if (height - y >= levelYPosition && height - y <= levelYPosition + levelHeight
+                       && x >= levelXPosition && x <= levelXPosition + levelWidth) {
+                    System.out.println("Нажатая ячейка:");
+                    System.out.println("row = " + (int) (height - y - levelYPosition)/64);
+                    System.out.println("col = " + (int) (x - levelXPosition)/64);
+                }
             }
         } else {
             isLeftButtonPressed = false;
@@ -296,11 +304,12 @@ public class LoadLevel {
     }
 
     private static void drawMouse() {
-        glColor3f(1, 1, 1);												// set the color to white
+        glColor3f(1, 1, 1);
+        final int size = 10;// set the color to white
         int x = Mouse.getX();
-        int y = Mouse.getY();
+        int y = Mouse.getY() - size;
         // Рисуем уровень
-        int size = 10;
+        
         glBegin(GL_QUADS);
         {
             //glTexCoord2f(0, 0);

@@ -5,6 +5,9 @@
  */
 package animationproject;
 
+import static animationproject.FBOExample.getTime;
+import static animationproject.FBOExample.lastFPS;
+import static animationproject.FBOExample.updateFPS;
 import com.thoughtworks.xstream.XStream;
 import com.thoughtworks.xstream.converters.reflection.PureJavaReflectionProvider;
 import com.thoughtworks.xstream.io.xml.Dom4JDriver;
@@ -41,10 +44,11 @@ public class LoadLevel {
         loadGroundTexture();
         loadAndDrawLevel();
         boolean done = false;
+        lastFPS = getTime();
         while (!done) {
 
             render();
-
+            updateFPS();
             Display.update();
             Display.sync(100);
 
@@ -60,9 +64,9 @@ public class LoadLevel {
         try {
             DisplayMode displayMode = new DisplayMode(width, height);
             Display.setDisplayMode(displayMode);
-            Display.setTitle("FBOtest");
+            Display.setTitle("LoadLevel");
             Display.create();
-            Display.setVSyncEnabled(true);
+            Display.setVSyncEnabled(false);
         } catch (LWJGLException e) {
             e.printStackTrace();
             System.exit(0);
@@ -121,8 +125,13 @@ public class LoadLevel {
         glColor3f(1, 1, 1);
 
         glBindTexture(GL_TEXTURE_2D, groundsTexture.getTextureID());
-        glViewport(0, 0, width, height);
-        
+        glViewport(0, 0, levelWidth, levelHeight);
+        //glScalef(GL_S, GL_S, GL_S);
+        float w = levelWidth;
+        float www = width;
+        float h = levelHeight;
+        float hhh = height;
+        glScalef(www / w, hhh / h, 1.0f);
         int i = 0;
         int j = 0;
         for (int[] col : level.grounds) {
@@ -134,7 +143,7 @@ public class LoadLevel {
             i++;
             j = 0;
         }
-
+        glScalef(1.0f, 1.0f, 1.0f);
         glDisable(GL_QUADS);
         glBindTexture(GL_TEXTURE_2D, 0);
         glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
@@ -147,52 +156,52 @@ public class LoadLevel {
 
         int textureWidth = groundsTexture.getTextureWidth();
         int textureHeight = groundsTexture.getTextureHeight();
-        
+
         float row = varX * (ground.col - 1);
         float col = varY * (ground.row - 1);
-        float ww = textureWidth/a;
-        float hh = textureHeight/a;
-        
+        float ww = textureWidth / a;
+        float hh = textureHeight / a;
+        final int yOffset = height - levelHeight;
+
         glBegin(GL_QUADS);
         {
             glTexCoord2f(row, col);
-            glVertex2f(x, height-y);
+            glVertex2f(x, height - y - yOffset);
             glTexCoord2f(row + varX, col);
-            glVertex2f((x + ww), height-y);
+            glVertex2f((x + ww), height - y - yOffset);
             glTexCoord2f(row + varX, col + varY);
-            glVertex2f((x + ww), height-(y + hh));
+            glVertex2f((x + ww), height - (y + hh) - yOffset);
             glTexCoord2f(row, col + varY);
-            glVertex2f(x, height-(y + hh));
+            glVertex2f(x, height - (y + hh) - yOffset);
         }
         glEnd();
     }
-    
-    private static void render() {
-        glEnable(GL_TEXTURE_2D);		
 
+    private static void render() {
+        glEnable(GL_TEXTURE_2D);
 
         glClearColor(0.0f, 0.0f, 0.0f, 0.5f);
-        glClear(GL_COLOR_BUFFER_BIT );			// Clear Screen And Depth Buffer on the framebuffer to black
+        glClear(GL_COLOR_BUFFER_BIT);			// Clear Screen And Depth Buffer on the framebuffer to black
 
         glBindTexture(GL_TEXTURE_2D, levelTextureID);					// bind our FBO texture
 
         glViewport(0, 0, width, height);									// set The Current Viewport
 
         glLoadIdentity();												// Reset The Modelview Matrix
-        
+
         glColor3f(1, 1, 1);												// set the color to white
-        float x = width/2-levelWidth/2;
-        float y = height/2-levelHeight/2;
+        float x = width / 2 - levelWidth / 2;
+        float y = height / 2 - levelHeight / 2;
         glBegin(GL_QUADS);
         {
             glTexCoord2f(0, 0);
             glVertex2f(x, y);
             glTexCoord2f(1, 0);
-            glVertex2f(x+levelWidth, y);
+            glVertex2f(x + levelWidth, y);
             glTexCoord2f(1, 1);
-            glVertex2f(x+levelWidth, y+levelHeight);
+            glVertex2f(x + levelWidth, y + levelHeight);
             glTexCoord2f(0, 1);
-            glVertex2f(x, y+levelHeight);
+            glVertex2f(x, y + levelHeight);
         }
         glEnd();
 

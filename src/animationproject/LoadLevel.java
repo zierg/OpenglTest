@@ -26,31 +26,28 @@ import org.newdawn.slick.opengl.TextureLoader;
 import org.newdawn.slick.util.ResourceLoader;
 
 /**
- * Класс рисует уровень один раз на текстуру-буфер, затем
- * на каждой итерации цикла отрисовывает это текстуру,
- * поэтому не тормозит.
+ * Класс рисует уровень один раз на текстуру-буфер, затем на каждой итерации
+ * цикла отрисовывает это текстуру, поэтому не тормозит.
+ *
  * @author ivko0314
  */
 public class LoadLevel {
-    
+
     // Скорость перемещения по уровню при помощи мыши по вертикали/горизонтали
     private static final int VERTICAL_MOUSE_SPEED = 10;
     private static final int HORIZONTAL_MOUSE_SPEED = 10;
-
+    private static final int MOUSE_OFFSET = 100; // Максимальное смещение "камеры" при достижении края уровня
+    private static boolean isLeftButtonPressed = false;
     // Размеры окна
     private final static int width = 800;
     private final static int height = 600;
-    
     private static Texture groundsTexture; // Текстура с участками земли
     private static Ground[] grounds; // Массив участков земли
-    
     private static int levelTextureID; // ID для текстуры, куда будет рисоваться уровень.
     private static int framebufferID; // ID буфера, к которому прикрепится текстура уровня.
-    
     // Размеры уровня (в пикселях)
     private static int levelWidth;
     private static int levelHeight;
-    
     private static float levelXPosition;
     private static float levelYPosition;
 
@@ -75,34 +72,40 @@ public class LoadLevel {
 
         Display.destroy();
     }
-    
+
     /**
      * Метод для прослушивания событий мыши
      */
     private static void listenMouse() {
         int x = Mouse.getX();
         int y = Mouse.getY();
-        
-        if (x <= 0 /*|| levelXPosition > 0*/) {
-            levelXPosition+=HORIZONTAL_MOUSE_SPEED;
-        } else if (x >= width-1/* || levelXPosition < L*/) {
-            levelXPosition-=HORIZONTAL_MOUSE_SPEED;
+
+        if (x <= 0 && levelXPosition < MOUSE_OFFSET) {
+            levelXPosition += HORIZONTAL_MOUSE_SPEED;
+        } else if (x >= width - 1 && levelXPosition > width - levelWidth - MOUSE_OFFSET) {
+            levelXPosition -= HORIZONTAL_MOUSE_SPEED;
         }
-        
-        if (y <= 0) {
-            levelYPosition-=VERTICAL_MOUSE_SPEED;
-        } else if (y >= height-1) {
-            levelYPosition+=VERTICAL_MOUSE_SPEED;
+
+        if (y <= 0 && levelYPosition > height - levelHeight - MOUSE_OFFSET) {
+            levelYPosition -= VERTICAL_MOUSE_SPEED;
+        } else if (y >= height - 1 && levelYPosition < MOUSE_OFFSET) {
+            levelYPosition += VERTICAL_MOUSE_SPEED;
         }
-        
-        if(Mouse.isButtonDown(0)) {
-            System.out.println("x = " + x + ", y = " + y);
+
+        if (Mouse.isButtonDown(0)) {
+            if (!isLeftButtonPressed) {
+                System.out.println("x = " + x + ", y = " + y);
+                isLeftButtonPressed = true;
+            }
+        } else {
+            isLeftButtonPressed = false;
         }
     }
 
     /**
      * Инициализация OpenGL
-     * @throws IOException 
+     *
+     * @throws IOException
      */
     private static void initOpenGL() throws IOException {
         try {
@@ -123,14 +126,15 @@ public class LoadLevel {
         //GLU.gluPerspective(45.0f, 512f / 512f, 1.0f, 100.0f);		// Calculate The Aspect Ratio Of The Window	
         glMatrixMode(GL_MODELVIEW);								// Select The Modelview Matrix
         glLoadIdentity();
-        
+
         Mouse.setGrabbed(true); // Захватываем мышь.
-        
+
     }
 
     /**
      * Загрузка текстуры участков земли, загрузка массива участков земли
-     * @throws IOException 
+     *
+     * @throws IOException
      */
     private static void loadGroundTexture() throws IOException {
         groundsTexture = TextureLoader.getTexture("PNG", ResourceLoader.getResourceAsStream("resources\\grounds.png"));
@@ -145,7 +149,8 @@ public class LoadLevel {
 
     /**
      * Загрузка уровня и рисование его на текстуре levelTextureID
-     * @throws FileNotFoundException 
+     *
+     * @throws FileNotFoundException
      */
     private static void loadAndDrawLevel() throws FileNotFoundException {
         // Загрузка уровня
@@ -168,7 +173,7 @@ public class LoadLevel {
         // Координаты задаём так, чтобы в середине окна был центр уровня
         levelXPosition = width / 2 - levelWidth / 2;
         levelYPosition = height / 2 - levelHeight / 2;
-        
+
 // initialize color texture
         glBindTexture(GL_TEXTURE_2D, levelTextureID);									// Bind the colorbuffer texture
         glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);				// make it linear filterd
@@ -192,7 +197,7 @@ public class LoadLevel {
         float h = levelHeight;
         float hhh = height;
         glScalef(www / w, hhh / h, 1.0f);
-        
+
         // Отрисовка уровня
         int i = 0;
         int j = 0;
@@ -206,7 +211,7 @@ public class LoadLevel {
             j = 0;
         }
         glScalef(1.0f, 1.0f, 1.0f); // Меняем масштаб обратно
-        
+
         // Отключаем рисование, переключаемся с буфера обратно
         glDisable(GL_QUADS);
         glBindTexture(GL_TEXTURE_2D, 0);
@@ -216,6 +221,7 @@ public class LoadLevel {
 
     /**
      * Рисование участка земли
+     *
      * @param ground участок
      * @param x координата x
      * @param y координата y
@@ -232,11 +238,11 @@ public class LoadLevel {
         // Координаты строки и столбца текстуры, в которых находится нужный участок земли 
         float row = varX * (ground.col - 1);
         float col = varY * (ground.row - 1);
-        
+
         // Ширина и высота участка земли в пикселях
         float ww = textureWidth / a;
         float hh = textureHeight / a;
-        
+
         // Смещение по вертикали в пикселях (т.к. отсчёт y начинается снизу, а рисовать нужно сверху, то происходит глюк)
         final int yOffset = height - levelHeight;
 
@@ -269,7 +275,7 @@ public class LoadLevel {
         glLoadIdentity();												// Reset The Modelview Matrix
 
         glColor3f(1, 1, 1);												// set the color to white
-        
+
         // Рисуем уровень
         glBegin(GL_QUADS);
         {
@@ -283,11 +289,12 @@ public class LoadLevel {
             glVertex2f(levelXPosition, levelYPosition + levelHeight);
         }
         glEnd();
-drawMouse();
+        glBindTexture(GL_TEXTURE_2D, 0);
+        drawMouse();
         glDisable(GL_TEXTURE_2D);
         glFlush();
     }
-    
+
     private static void drawMouse() {
         glColor3f(1, 1, 1);												// set the color to white
         int x = Mouse.getX();
@@ -297,13 +304,13 @@ drawMouse();
         glBegin(GL_QUADS);
         {
             //glTexCoord2f(0, 0);
-            glVertex2f(x, height-y);
+            glVertex2f(x, height - y);
             //glTexCoord2f(1, 0);
-            glVertex2f(x + size, height-y);
+            glVertex2f(x + size, height - y);
             //glTexCoord2f(1, 1);
-            glVertex2f(x + size, height-(y + size));
+            glVertex2f(x + size, height - (y + size));
             //glTexCoord2f(0, 1);
-            glVertex2f(x, height-(y + size));
+            glVertex2f(x, height - (y + size));
         }
         glEnd();
     }

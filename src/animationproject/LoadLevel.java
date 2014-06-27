@@ -40,6 +40,7 @@ public class LoadLevel {
     private static int levelHeight;
 
     public static void main(String[] args) throws IOException {
+        LevelCreator.main(args);
         initOpenGL();
         loadGroundTexture();
         loadAndDrawLevel();

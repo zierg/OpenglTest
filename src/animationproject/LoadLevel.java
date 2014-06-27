@@ -16,6 +16,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
 import org.lwjgl.LWJGLException;
+import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.Display;
 import org.lwjgl.opengl.DisplayMode;
 import static org.lwjgl.opengl.EXTFramebufferObject.*;
@@ -31,6 +32,10 @@ import org.newdawn.slick.util.ResourceLoader;
  * @author ivko0314
  */
 public class LoadLevel {
+    
+    // Скорость перемещения по уровню при помощи мыши по вертикали/горизонтали
+    private static final int VERTICAL_MOUSE_SPEED = 10;
+    private static final int HORIZONTAL_MOUSE_SPEED = 10;
 
     // Размеры окна
     private final static int width = 800;
@@ -45,6 +50,9 @@ public class LoadLevel {
     // Размеры уровня (в пикселях)
     private static int levelWidth;
     private static int levelHeight;
+    
+    private static float levelXPosition;
+    private static float levelYPosition;
 
     public static void main(String[] args) throws IOException {
         LevelCreator.main(args); // Генерируем случайный уровень.
@@ -54,7 +62,7 @@ public class LoadLevel {
         boolean done = false;
         lastFPS = getTime();
         while (!done) {
-
+            listenMouse();
             render();
             updateFPS();
             Display.update();
@@ -66,6 +74,30 @@ public class LoadLevel {
         }
 
         Display.destroy();
+    }
+    
+    /**
+     * Метод для прослушивания событий мыши
+     */
+    private static void listenMouse() {
+        int x = Mouse.getX();
+        int y = Mouse.getY();
+        
+        if (x <= 0 /*|| levelXPosition > 0*/) {
+            levelXPosition+=HORIZONTAL_MOUSE_SPEED;
+        } else if (x >= width-1/* || levelXPosition < L*/) {
+            levelXPosition-=HORIZONTAL_MOUSE_SPEED;
+        }
+        
+        if (y <= 0) {
+            levelYPosition-=VERTICAL_MOUSE_SPEED;
+        } else if (y >= height-1) {
+            levelYPosition+=VERTICAL_MOUSE_SPEED;
+        }
+        
+        if(Mouse.isButtonDown(0)) {
+            System.out.println("x = " + x + ", y = " + y);
+        }
     }
 
     /**
@@ -91,6 +123,9 @@ public class LoadLevel {
         //GLU.gluPerspective(45.0f, 512f / 512f, 1.0f, 100.0f);		// Calculate The Aspect Ratio Of The Window	
         glMatrixMode(GL_MODELVIEW);								// Select The Modelview Matrix
         glLoadIdentity();
+        
+        Mouse.setGrabbed(true); // Захватываем мышь.
+        
     }
 
     /**
@@ -130,7 +165,11 @@ public class LoadLevel {
         final int GROUND_SIZE = 64; // Размер участка земли
         levelWidth = level.grounds.length * GROUND_SIZE;
         levelHeight = level.grounds.length * GROUND_SIZE;
-        // initialize color texture
+        // Координаты задаём так, чтобы в середине окна был центр уровня
+        levelXPosition = width / 2 - levelWidth / 2;
+        levelYPosition = height / 2 - levelHeight / 2;
+        
+// initialize color texture
         glBindTexture(GL_TEXTURE_2D, levelTextureID);									// Bind the colorbuffer texture
         glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);				// make it linear filterd
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, levelWidth, levelHeight, 0, GL_RGBA, GL_INT, (java.nio.ByteBuffer) null);	// Create the texture data
@@ -231,25 +270,41 @@ public class LoadLevel {
 
         glColor3f(1, 1, 1);												// set the color to white
         
-        // Координаты задаём так, чтобы в середине окна был центр уровня
-        float x = width / 2 - levelWidth / 2;
-        float y = height / 2 - levelHeight / 2;
-        
         // Рисуем уровень
         glBegin(GL_QUADS);
         {
             glTexCoord2f(0, 0);
-            glVertex2f(x, y);
+            glVertex2f(levelXPosition, levelYPosition);
             glTexCoord2f(1, 0);
-            glVertex2f(x + levelWidth, y);
+            glVertex2f(levelXPosition + levelWidth, levelYPosition);
             glTexCoord2f(1, 1);
-            glVertex2f(x + levelWidth, y + levelHeight);
+            glVertex2f(levelXPosition + levelWidth, levelYPosition + levelHeight);
             glTexCoord2f(0, 1);
-            glVertex2f(x, y + levelHeight);
+            glVertex2f(levelXPosition, levelYPosition + levelHeight);
         }
         glEnd();
-
+drawMouse();
         glDisable(GL_TEXTURE_2D);
         glFlush();
+    }
+    
+    private static void drawMouse() {
+        glColor3f(1, 1, 1);												// set the color to white
+        int x = Mouse.getX();
+        int y = Mouse.getY();
+        // Рисуем уровень
+        int size = 10;
+        glBegin(GL_QUADS);
+        {
+            //glTexCoord2f(0, 0);
+            glVertex2f(x, height-y);
+            //glTexCoord2f(1, 0);
+            glVertex2f(x + size, height-y);
+            //glTexCoord2f(1, 1);
+            glVertex2f(x + size, height-(y + size));
+            //glTexCoord2f(0, 1);
+            glVertex2f(x, height-(y + size));
+        }
+        glEnd();
     }
 }

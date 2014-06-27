@@ -37,11 +37,11 @@ public class FBOExample {
     /**
      * frames per second
      */
-    int fps;
+     static int fps;
     /**
      * last fps time
      */
-    long lastFPS;
+     static  long lastFPS;
 
     /**
      * is VSync Enabled
@@ -335,14 +335,14 @@ public class FBOExample {
      *
      * @return The system time in milliseconds
      */
-    public long getTime() {
+    public static long getTime() {
         return (Sys.getTime() * 1000) / Sys.getTimerResolution();
     }
 
     /**
      * Calculate the FPS and set it in the title bar
      */
-    public void updateFPS() {
+    public  static  void updateFPS() {
         if (getTime() - lastFPS > 1000) {
             Display.setTitle("FPS: " + fps);
             fps = 0;

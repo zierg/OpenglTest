@@ -172,7 +172,8 @@ public class AnimationProject {
 
         int[] x = new int[0];
         xstream.alias("row", x.getClass());
-        level.grounds = new int[5][5];
+        final int SIZE = 10;
+        level.grounds = new int[SIZE][SIZE];
 
         for (int[] g : level.grounds) {           
             for (int i =0; i < g.length; i++) {

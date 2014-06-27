@@ -5,6 +5,9 @@
  */
 package animationproject;
 
+import static animationproject.FBOExample.getTime;
+import static animationproject.FBOExample.lastFPS;
+import static animationproject.FBOExample.updateFPS;
 import com.thoughtworks.xstream.XStream;
 import com.thoughtworks.xstream.converters.reflection.PureJavaReflectionProvider;
 import com.thoughtworks.xstream.io.xml.Dom4JDriver;
@@ -28,8 +31,8 @@ import org.newdawn.slick.util.ResourceLoader;
  */
 public class TextureAtlasTest {
 
-    static int width = 800;
-    static int height = 600;
+    static int width = 1000;
+    static int height = 1000;
     static String title = "test";
 
     static Texture texture = null;
@@ -56,7 +59,7 @@ public class TextureAtlasTest {
         xstream.alias("row", x.getClass());
         reader = new FileReader("level.xml");
         Level level = (Level) xstream.fromXML(reader);
-
+lastFPS = getTime();
         // Основной цикл.
         while (!done) {
             glClear(GL_COLOR_BUFFER_BIT);
@@ -78,6 +81,7 @@ public class TextureAtlasTest {
                 i++;
                 j=0;
             }
+            updateFPS();
             /////////////
             Display.update();
             Display.sync(100);
@@ -145,7 +149,7 @@ GL11.glViewport(0, 0, width, height);
             Display.setDisplayMode(displayMode);
             Display.setTitle(title);
             Display.create();
-            Display.setVSyncEnabled(true);
+            Display.setVSyncEnabled(false);
         } catch (LWJGLException e) {
             e.printStackTrace();
             System.exit(0);

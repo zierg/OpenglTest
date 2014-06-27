@@ -17,10 +17,6 @@ public class Ground {
     public String imageFile;
     public String soundFile;
     
-    //transient public final Texture image;
-    //transient private final GraphicsHelper graphHelper = AnimationProject.graphHelper;
-    
-    
     public int row = 1;
     public int col = 1;
     
@@ -29,6 +25,5 @@ public class Ground {
         final String groundFolder = "gr";
         imageFile = groundFolder + SEP + "img" + SEP + "default.png";
         soundFile = groundFolder + SEP + "snd" + SEP + "default.wav";
-        //image = graphHelper.loadImage(fileName);
     }
 }

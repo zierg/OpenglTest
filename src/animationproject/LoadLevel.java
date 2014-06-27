@@ -25,22 +25,29 @@ import org.newdawn.slick.opengl.TextureLoader;
 import org.newdawn.slick.util.ResourceLoader;
 
 /**
- *
+ * Класс рисует уровень один раз на текстуру-буфер, затем
+ * на каждой итерации цикла отрисовывает это текстуру,
+ * поэтому не тормозит.
  * @author ivko0314
  */
 public class LoadLevel {
 
+    // Размеры окна
     private final static int width = 800;
     private final static int height = 600;
-    private static Texture groundsTexture;
-    private static Ground[] grounds;
-    private static int levelTextureID;
-    private static int framebufferID;
+    
+    private static Texture groundsTexture; // Текстура с участками земли
+    private static Ground[] grounds; // Массив участков земли
+    
+    private static int levelTextureID; // ID для текстуры, куда будет рисоваться уровень.
+    private static int framebufferID; // ID буфера, к которому прикрепится текстура уровня.
+    
+    // Размеры уровня (в пикселях)
     private static int levelWidth;
     private static int levelHeight;
 
     public static void main(String[] args) throws IOException {
-        LevelCreator.main(args);
+        LevelCreator.main(args); // Генерируем случайный уровень.
         initOpenGL();
         loadGroundTexture();
         loadAndDrawLevel();
@@ -61,6 +68,10 @@ public class LoadLevel {
         Display.destroy();
     }
 
+    /**
+     * Инициализация OpenGL
+     * @throws IOException 
+     */
     private static void initOpenGL() throws IOException {
         try {
             DisplayMode displayMode = new DisplayMode(width, height);
@@ -82,6 +93,10 @@ public class LoadLevel {
         glLoadIdentity();
     }
 
+    /**
+     * Загрузка текстуры участков земли, загрузка массива участков земли
+     * @throws IOException 
+     */
     private static void loadGroundTexture() throws IOException {
         groundsTexture = TextureLoader.getTexture("PNG", ResourceLoader.getResourceAsStream("resources\\grounds.png"));
         XStream xstream = new XStream(new PureJavaReflectionProvider(), new Dom4JDriver());
@@ -93,6 +108,10 @@ public class LoadLevel {
         grounds = (Ground[]) xstream.fromXML(reader);
     }
 
+    /**
+     * Загрузка уровня и рисование его на текстуре levelTextureID
+     * @throws FileNotFoundException 
+     */
     private static void loadAndDrawLevel() throws FileNotFoundException {
         // Загрузка уровня
         XStream xstream = new XStream(new PureJavaReflectionProvider(), new Dom4JDriver());
@@ -108,7 +127,7 @@ public class LoadLevel {
         levelTextureID = glGenTextures();												// and a new texture used as a color buffer
         glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, framebufferID); 						// switch to the new framebuffer
 
-        final int GROUND_SIZE = 64;
+        final int GROUND_SIZE = 64; // Размер участка земли
         levelWidth = level.grounds.length * GROUND_SIZE;
         levelHeight = level.grounds.length * GROUND_SIZE;
         // initialize color texture
@@ -118,52 +137,71 @@ public class LoadLevel {
         glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, levelTextureID, 0); // attach it to the framebuffer
 
         glViewport(0, 0, levelWidth, levelHeight);
-        glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
+        glClearColor(0.5f, 0.5f, 0.5f, 1.0f); // Фоновый серый цвет. Для теста, полностью ли текстура заполняется уровнем (если нет, будет виден фон)
         glClear(GL_COLOR_BUFFER_BIT);			// Clear Screen And Depth Buffer on the fbo to red
         glLoadIdentity();
 
         glEnable(GL_TEXTURE_2D);
         glColor3f(1, 1, 1);
 
-        glBindTexture(GL_TEXTURE_2D, groundsTexture.getTextureID());
-        glViewport(0, 0, levelWidth, levelHeight);
-        //glScalef(GL_S, GL_S, GL_S);
+        glBindTexture(GL_TEXTURE_2D, groundsTexture.getTextureID()); // Закрепляем текстуру с участками земли
+        glViewport(0, 0, levelWidth, levelHeight); // Переключаемся на размеры уровня (иначе всё, что по координатам не входит в размер окна, не отрисуется на текстуре)
+
+        // Устанавливаем масштаб, чтобы участки рисовались в полный размер.
         float w = levelWidth;
         float www = width;
         float h = levelHeight;
         float hhh = height;
         glScalef(www / w, hhh / h, 1.0f);
+        
+        // Отрисовка уровня
         int i = 0;
         int j = 0;
         for (int[] col : level.grounds) {
             for (int row : col) {
                 Ground ground = grounds[row];
-                drawGround(ground, j * 64, i * 64);
+                drawGround(ground, j * GROUND_SIZE, i * GROUND_SIZE);
                 j++;
             }
             i++;
             j = 0;
         }
-        glScalef(1.0f, 1.0f, 1.0f);
+        glScalef(1.0f, 1.0f, 1.0f); // Меняем масштаб обратно
+        
+        // Отключаем рисование, переключаемся с буфера обратно
         glDisable(GL_QUADS);
         glBindTexture(GL_TEXTURE_2D, 0);
         glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
+        glViewport(0, 0, width, height);
     }
 
+    /**
+     * Рисование участка земли
+     * @param ground участок
+     * @param x координата x
+     * @param y координата y
+     */
     private static void drawGround(Ground ground, float x, float y) {
-        final int a = groundsTexture.getImageHeight() / 64;
-        final float varX = 1f / a;
-        final float varY = 1f / a;
+        final int a = groundsTexture.getImageHeight() / 64; // 64 - размер одного участка земли, переменная a - количество участков земли по вериткали (в данном случае и по горизонтали)
+        final float varX = 1f / a; // ширина участка земли относительно ширины текстуры
+        final float varY = 1f / a; // высота участка земли относительно высоты текстуры
 
+        // Размер текстуры
         int textureWidth = groundsTexture.getTextureWidth();
         int textureHeight = groundsTexture.getTextureHeight();
 
+        // Координаты строки и столбца текстуры, в которых находится нужный участок земли 
         float row = varX * (ground.col - 1);
         float col = varY * (ground.row - 1);
+        
+        // Ширина и высота участка земли в пикселях
         float ww = textureWidth / a;
         float hh = textureHeight / a;
+        
+        // Смещение по вертикали в пикселях (т.к. отсчёт y начинается снизу, а рисовать нужно сверху, то происходит глюк)
         final int yOffset = height - levelHeight;
 
+        // Рисуем участок
         glBegin(GL_QUADS);
         {
             glTexCoord2f(row, col);
@@ -178,21 +216,26 @@ public class LoadLevel {
         glEnd();
     }
 
+    /**
+     * Отрисовка созданной ранее текстуры с уровнем.
+     */
     private static void render() {
         glEnable(GL_TEXTURE_2D);
 
         glClearColor(0.0f, 0.0f, 0.0f, 0.5f);
         glClear(GL_COLOR_BUFFER_BIT);			// Clear Screen And Depth Buffer on the framebuffer to black
 
-        glBindTexture(GL_TEXTURE_2D, levelTextureID);					// bind our FBO texture
-
-        glViewport(0, 0, width, height);									// set The Current Viewport
+        glBindTexture(GL_TEXTURE_2D, levelTextureID);	// переключаемся на созданную ранее текстуру уровня				// bind our FBO texture
 
         glLoadIdentity();												// Reset The Modelview Matrix
 
         glColor3f(1, 1, 1);												// set the color to white
+        
+        // Координаты задаём так, чтобы в середине окна был центр уровня
         float x = width / 2 - levelWidth / 2;
         float y = height / 2 - levelHeight / 2;
+        
+        // Рисуем уровень
         glBegin(GL_QUADS);
         {
             glTexCoord2f(0, 0);

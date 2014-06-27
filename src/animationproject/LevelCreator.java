@@ -10,11 +10,13 @@ import java.io.Reader;
 import java.io.Writer;
 
 /**
- *
+ * Класс для генерации случайных уровней. Размер уровня - переменная SIZE.
  * @author Michael
  */
 
 public class LevelCreator {
+    
+    final static int SIZE = 128; // Больше 128 пока не хочет, отображает белый экран.
 
     private static final XStream xstream = new XStream(new PureJavaReflectionProvider(), new Dom4JDriver()); 
     // new PureJavaReflectionProvider() - будет использоваться конструктор по умолчанию, чтобы отсутствующие поля 
@@ -39,12 +41,12 @@ public class LevelCreator {
 
         int[] x = new int[0];
         xstream.alias("row", x.getClass());
-        final int SIZE = 120;
-        level.grounds = new int[SIZE][SIZE];
+        level.grounds = new int[SIZE][SIZE]; // Создание уровня
 
+        // Заполнение уровня
         for (int[] g : level.grounds) {           
             for (int i =0; i < g.length; i++) {
-                g[i] = (int) (Math.random()*16);
+                g[i] = (int) (Math.random()*16); // 16 - количество участков земли (с 0 по 15)
                 if (g[i] == 16) {
                     g[i] = 15;
                 }
@@ -52,32 +54,5 @@ public class LevelCreator {
         }
         Writer writer = new FileWriter("level.xml");
         xstream.toXML(level, writer);
-    }
-    
-    private static void write() throws IOException {
-        Ground[] gr = new Ground[16];
-
-        int id = 0;
-        for (int i = 0; i < 4; i++) {
-            for (int j = 0; j < 4; j++) {
-                gr[id] = new Ground();
-                gr[id].id = id;
-                gr[id].col = j;
-                gr[id].row = i;
-                id++;
-            }
-        }
-        
-        Writer writer = new FileWriter("Grounds.xml");
-        xstream.toXML(gr, writer);
-    }
-    
-    private static void read() throws FileNotFoundException {
-        Reader reader = new FileReader("Grounds.xml");
-        Ground[] gr = (Ground[]) xstream.fromXML(reader);
-        for (Ground g : gr) {
-            System.out.println(g.imageFile);
-            System.out.println(g.id);
-        }
     }
 }

@@ -26,11 +26,12 @@ import org.newdawn.slick.opengl.TextureLoader;
 import org.newdawn.slick.util.ResourceLoader;
 
 /**
- *
+ * Класс рисует уровень заново на каждой итерации цикла, поэтому тормозит.
  * @author ivko0314
  */
 public class TextureAtlasTest {
 
+    // Настройки для окна
     static int width = 1000;
     static int height = 1000;
     static String title = "test";
@@ -42,77 +43,75 @@ public class TextureAtlasTest {
         loadTexture();
 
         boolean done = false;
-        XStream xstream = new XStream(new PureJavaReflectionProvider(), new Dom4JDriver()); 
-    // new PureJavaReflectionProvider() - будет использоваться конструктор по умолчанию, чтобы отсутствующие в xml поля не были null
+        XStream xstream = new XStream(new PureJavaReflectionProvider(), new Dom4JDriver());
+        // new PureJavaReflectionProvider() - будет использоваться конструктор по умолчанию, чтобы отсутствующие в xml поля не были null
 
         xstream.processAnnotations(Ground.class);
         xstream.processAnnotations(Level.class);
+        
+        // Читаем файл с описаниями участков земли
         Ground[] gr = new Ground[0];
         xstream.alias("Grounds", gr.getClass());
         Reader reader = new FileReader("Grounds.xml");
         gr = (Ground[]) xstream.fromXML(reader);
-        for (Ground g : gr) {
-            
-            System.out.println(g.id);
-        }
         int[] x = new int[0];
+        
+        // Читаем файл с уровнем
         xstream.alias("row", x.getClass());
         reader = new FileReader("level.xml");
         Level level = (Level) xstream.fromXML(reader);
-lastFPS = getTime();
+        lastFPS = getTime();
         // Основной цикл.
         while (!done) {
             glClear(GL_COLOR_BUFFER_BIT);
-            
-            /*for (Ground g : gr) {
-                drawGround(g, (int) (Math.random()*width), (int) (Math.random()*height));
-            }*/
-            
-            
-            //////////////
-            int i=0;
-            int j=0;
-            for (int[] col: level.grounds) {
+
+            int i = 0;
+            int j = 0;
+            for (int[] col : level.grounds) {
                 for (int row : col) {
-                    Ground ground =gr[row];
-                    drawGround(ground, j*64, i*64);
+                    Ground ground = gr[row];
+                    drawGround(ground, j * 64, i * 64);
                     j++;
                 }
                 i++;
-                j=0;
+                j = 0;
             }
             updateFPS();
-            /////////////
             Display.update();
             Display.sync(100);
 
             if (Display.isCloseRequested()) {
                 done = true;
             }
-            //Thread.sleep(50);
         }
 
         Display.destroy();
 
     }
 
+    /**
+     * Рисует участок земли
+     * @param ground участок
+     * @param x координата x
+     * @param y координата y
+     */
     static void drawGround(Ground ground, float x, float y) {
         GL11.glEnable(GL11.GL_TEXTURE_2D);
-        //GL11.glPushMatrix();
-/*x+=100;
-y+=100;*/
-        texture.bind();
-GL11.glViewport(0, 0, width, height);
-        final int a = texture.getImageHeight()/64;
-        final float varX = 1f/a;
-        final float varY = 1f/a;
 
+        texture.bind(); // Закрепляем текстуру, которую будем рисовать текстуру
+        final int a = texture.getImageHeight() / 64; // 64 - размер одного участка земли, переменная a - количество участков земли по вериткали (в данном случае и по горизонтали)
+        final float varX = 1f / a; // ширина участка земли относительно ширины текстуры
+        final float varY = 1f / a; // высота участка земли относительно ширины текстуры
+
+        // Размер текстуры
         int textureWidth = texture.getTextureWidth();
         int textureHeight = texture.getTextureHeight();
 
+        // Координаты строки и столбца текстуры, в которых находится нужный участок земли 
         float row = varX * (ground.col - 1);
         float col = varY * (ground.row - 1);
 
+        // Рисуем участок
         GL11.glBegin(GL11.GL_QUADS);
         {
             GL11.glTexCoord2f(row, col);
@@ -131,18 +130,14 @@ GL11.glViewport(0, 0, width, height);
     static void loadTexture() {
         try {
             texture = TextureLoader.getTexture("PNG", ResourceLoader.getResourceAsStream("resources\\grounds.png"));
-
-            /*System.out.println("Texture loaded: " + texture);
-            System.out.println(">> Image width: " + texture.getImageWidth());
-            System.out.println(">> Image height: " + texture.getImageHeight());
-            System.out.println(">> Texture width: " + texture.getTextureWidth());
-            System.out.println(">> Texture height: " + texture.getTextureHeight());
-            System.out.println(">> Texture ID: " + texture.getTextureID());*/
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
+    /**
+     * Инициализация OpenGL
+     */
     static void init() {
         try {
             DisplayMode displayMode = new DisplayMode(width, height);

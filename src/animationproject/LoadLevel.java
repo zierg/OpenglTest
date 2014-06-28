@@ -16,6 +16,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
 import org.lwjgl.LWJGLException;
+import org.lwjgl.Sys;
 import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.Display;
 import org.lwjgl.opengl.DisplayMode;
@@ -33,16 +34,56 @@ import org.newdawn.slick.util.ResourceLoader;
  */
 public class LoadLevel {
 
+    private static boolean done = false;
+
+    /**
+     * Поток, прослушивающий события и управляющий игрой независимо от
+     * обновления изображения и FPS. Таким образом, скорость игры не меняется
+     * при низком/высоком FPS.
+     */
+    private static class GameHandler extends Thread {
+        // Интервал в миллисекундах, через который нужно обновлять игру
+
+        private static final int INTERVAL = 10;
+        // Последнее время обновления игры
+        private long lastTime = getTime();
+
+        public GameHandler() {
+            start();
+        }
+
+        @Override
+        public void run() {
+            while (!done) {
+                long time = getTime();
+                if (time - lastTime >= INTERVAL) {
+                    listenMouse();
+                    lastTime = time;
+                }
+            }
+        }
+
+        /**
+         * Получение точного времени в миллисекундах
+         *
+         * @return
+         */
+        private long getTime() {
+            return (Sys.getTime() * 1000) / Sys.getTimerResolution();
+        }
+    }
+    //-------------------------------------------------------------------------------------------
     // Скорость перемещения по уровню при помощи мыши по вертикали/горизонтали
     private static final int VERTICAL_MOUSE_SPEED = 10;
     private static final int HORIZONTAL_MOUSE_SPEED = 10;
     private static final int MOUSE_OFFSET = 100; // Максимальное смещение "камеры" при достижении края уровня
     private static boolean isLeftButtonPressed = false;
     // Размеры окна
-    private final static int width = 800;
-    private final static int height = 600;
+    private final static int width = 400;
+    private final static int height = 400;
     private static Texture groundsTexture; // Текстура с участками земли
     private static Ground[] grounds; // Массив участков земли
+    private static Level level = null; // Уровень.
     private static int levelTextureID; // ID для текстуры, куда будет рисоваться уровень.
     private static int framebufferID; // ID буфера, к которому прикрепится текстура уровня.
     // Размеры уровня (в пикселях)
@@ -52,14 +93,13 @@ public class LoadLevel {
     private static float levelYPosition;
 
     public static void main(String[] args) throws IOException {
-        LevelCreator.main(args); // Генерируем случайный уровень.
+        //LevelCreator.main(args); // Генерируем случайный уровень.
         initOpenGL();
         loadGroundTexture();
         loadAndDrawLevel();
-        boolean done = false;
         lastFPS = getTime();
+        new GameHandler();
         while (!done) {
-            listenMouse();
             render();
             updateFPS();
             Display.update();
@@ -96,13 +136,16 @@ public class LoadLevel {
             if (!isLeftButtonPressed) {
                 System.out.println("x = " + x + ", y = " + y); // Вывод координат
                 isLeftButtonPressed = true;
-                
+
                 // Вывод столбца и строки нажатой ячейки (только в том случае, когда клик был внутри уровня)
                 if (height - y >= levelYPosition && height - y <= levelYPosition + levelHeight
-                       && x >= levelXPosition && x <= levelXPosition + levelWidth) {
+                        && x >= levelXPosition && x <= levelXPosition + levelWidth) {
                     System.out.println("Нажатая ячейка:");
-                    System.out.println("row = " + (int) (height - y - levelYPosition)/64);
-                    System.out.println("col = " + (int) (x - levelXPosition)/64);
+                    int row = (int) (height - y - levelYPosition) / 64;
+                    int col = (int) (x - levelXPosition) / 64;
+                    System.out.println("row = " + row);
+                    System.out.println("col = " + col);
+                    System.out.println("Color = " + grounds[level.grounds[row][col]].name);
                 }
             }
         } else {
@@ -153,6 +196,9 @@ public class LoadLevel {
         xstream.alias("Grounds", gr.getClass());
         Reader reader = new FileReader("Grounds.xml");
         grounds = (Ground[]) xstream.fromXML(reader);
+        for (Ground g : grounds) {
+            System.out.println("id = " + g.id + ", color = " + g.name);
+        }
     }
 
     /**
@@ -168,7 +214,8 @@ public class LoadLevel {
         int[] x = new int[0];
         xstream.alias("row", x.getClass());
         Reader reader = new FileReader("level.xml");
-        Level level = (Level) xstream.fromXML(reader);
+        level = (Level) xstream.fromXML(reader);
+        
 
         // Рисование уровня
         framebufferID = glGenFramebuffersEXT();
@@ -244,8 +291,8 @@ public class LoadLevel {
         int textureHeight = groundsTexture.getTextureHeight();
 
         // Координаты строки и столбца текстуры, в которых находится нужный участок земли 
-        float row = varX * (ground.col - 1);
-        float col = varY * (ground.row - 1);
+        float row = varX * (ground.col);
+        float col = varY * (ground.row);
 
         // Ширина и высота участка земли в пикселях
         float ww = textureWidth / a;
@@ -309,7 +356,7 @@ public class LoadLevel {
         int x = Mouse.getX();
         int y = Mouse.getY() - size;
         // Рисуем уровень
-        
+
         glBegin(GL_QUADS);
         {
             //glTexCoord2f(0, 0);

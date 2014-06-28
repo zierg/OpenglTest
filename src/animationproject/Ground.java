@@ -14,6 +14,7 @@ public class Ground {
     @XStreamAsAttribute
     public int id;
     
+    public String name = "ground";
     public String imageFile;
     public String soundFile;
     

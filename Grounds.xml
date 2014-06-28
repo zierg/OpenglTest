@@ -4,96 +4,112 @@
   <ground id="0">
     <imageFile>gr\img\default.png</imageFile>
     <soundFile>gr\snd\default.wav</soundFile>
+	<name>red</name>
     <row>0</row>
     <col>0</col>
   </ground>
   <ground id="1">
     <imageFile>gr\img\default.png</imageFile>
     <soundFile>gr\snd\default.wav</soundFile>
+	<name>yellow</name>
     <row>0</row>
     <col>1</col>
   </ground>
   <ground id="2">
     <imageFile>gr\img\default.png</imageFile>
     <soundFile>gr\snd\default.wav</soundFile>
+	<name>purple</name>
     <row>0</row>
     <col>2</col>
   </ground>
   <ground id="3">
     <imageFile>gr\img\default.png</imageFile>
     <soundFile>gr\snd\default.wav</soundFile>
+	<name>white</name>
     <row>0</row>
     <col>3</col>
   </ground>
   <ground id="4">
     <imageFile>gr\img\default.png</imageFile>
     <soundFile>gr\snd\default.wav</soundFile>
+	<name>green</name>
     <row>1</row>
     <col>0</col>
   </ground>
   <ground id="5">
     <imageFile>gr\img\default.png</imageFile>
     <soundFile>gr\snd\default.wav</soundFile>
+	<name>blue</name>
     <row>1</row>
     <col>1</col>
   </ground>
   <ground id="6">
     <imageFile>gr\img\default.png</imageFile>
     <soundFile>gr\snd\default.wav</soundFile>
+	<name>dark yellow</name>
     <row>1</row>
     <col>2</col>
   </ground>
   <ground id="7">
     <imageFile>gr\img\default.png</imageFile>
     <soundFile>gr\snd\default.wav</soundFile>
+	<name>grey</name>
     <row>1</row>
     <col>3</col>
   </ground>
   <ground id="8">
     <imageFile>gr\img\default.png</imageFile>
     <soundFile>gr\snd\default.wav</soundFile>
+	<name>light blue</name>
     <row>2</row>
     <col>0</col>
   </ground>
   <ground id="9">
     <imageFile>gr\img\default.png</imageFile>
     <soundFile>gr\snd\default.wav</soundFile>
+	<name>pink</name>
     <row>2</row>
     <col>1</col>
   </ground>
   <ground id="10">
     <imageFile>gr\img\default.png</imageFile>
     <soundFile>gr\snd\default.wav</soundFile>
+	<name>light green</name>
     <row>2</row>
     <col>2</col>
   </ground>
   <ground id="11">
     <imageFile>gr\img\default.png</imageFile>
     <soundFile>gr\snd\default.wav</soundFile>
+	<name>light blue 2</name>
     <row>2</row>
     <col>3</col>
   </ground>
   <ground id="12">
     <imageFile>gr\img\default.png</imageFile>
     <soundFile>gr\snd\default.wav</soundFile>
+	<name>brown</name>
     <row>3</row>
     <col>0</col>
   </ground>
   <ground id="13">
     <imageFile>gr\img\default.png</imageFile>
     <soundFile>gr\snd\default.wav</soundFile>
+	<name>black</name>
     <row>3</row>
     <col>1</col>
   </ground>
   <ground id="14">
     <imageFile>gr\img\default.png</imageFile>
     <soundFile>gr\snd\default.wav</soundFile>
+	<name>another blue?</name>
     <row>3</row>
     <col>2</col>
   </ground>
   <ground id="15">
     <imageFile>gr\img\default.png</imageFile>
     <soundFile>gr\snd\default.wav</soundFile>
+	<name>orange</name>
     <row>3</row>
     <col>3</col>
   </ground>

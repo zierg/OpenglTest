@@ -93,7 +93,7 @@ public class LoadLevel {
     private static float levelYPosition;
 
     public static void main(String[] args) throws IOException {
-        //LevelCreator.main(args); // Генерируем случайный уровень.
+        LevelCreator.main(args); // Генерируем случайный уровень.
         initOpenGL();
         loadGroundTexture();
         loadAndDrawLevel();
@@ -196,9 +196,6 @@ public class LoadLevel {
         xstream.alias("Grounds", gr.getClass());
         Reader reader = new FileReader("Grounds.xml");
         grounds = (Ground[]) xstream.fromXML(reader);
-        for (Ground g : grounds) {
-            System.out.println("id = " + g.id + ", color = " + g.name);
-        }
     }
 
     /**
@@ -351,22 +348,28 @@ public class LoadLevel {
     }
 
     private static void drawMouse() {
-        glColor3f(1, 1, 1);
-        final int size = 10;// set the color to white
+        final int size = 10;
         int x = Mouse.getX();
         int y = Mouse.getY() - size;
-        // Рисуем уровень
 
+        glColor3f(0, 0, 0); // сначала чёрный квадрат
         glBegin(GL_QUADS);
         {
-            //glTexCoord2f(0, 0);
             glVertex2f(x, height - y);
-            //glTexCoord2f(1, 0);
             glVertex2f(x + size, height - y);
-            //glTexCoord2f(1, 1);
             glVertex2f(x + size, height - (y + size));
-            //glTexCoord2f(0, 1);
             glVertex2f(x, height - (y + size));
+        }
+        glEnd();
+        
+        // Затем белый поверх него
+        glColor3f(1, 1, 1);
+        glBegin(GL_QUADS);
+        {
+            glVertex2f(x+1, height - y-1);
+            glVertex2f(x + size-1, height - y-1);
+            glVertex2f(x + size-1, height - (y + size-1));
+            glVertex2f(x+1, height - (y + size-1));
         }
         glEnd();
     }

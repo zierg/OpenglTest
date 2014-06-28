@@ -78,6 +78,9 @@ public class LoadLevel {
     private static final int HORIZONTAL_MOUSE_SPEED = 10;
     private static final int MOUSE_OFFSET = 100; // Максимальное смещение "камеры" при достижении края уровня
     private static boolean isLeftButtonPressed = false;
+    private static boolean isRightButtonPressed = false;
+    private static int mouseXBeforePress;
+    private static int mouseYBeforePress;
     // Размеры окна
     private final static int width = 400;
     private final static int height = 400;
@@ -93,7 +96,7 @@ public class LoadLevel {
     private static float levelYPosition;
 
     public static void main(String[] args) throws IOException {
-        LevelCreator.main(args); // Генерируем случайный уровень.
+        //LevelCreator.main(args); // Генерируем случайный уровень.
         initOpenGL();
         loadGroundTexture();
         loadAndDrawLevel();
@@ -120,6 +123,48 @@ public class LoadLevel {
         int x = Mouse.getX();
         int y = Mouse.getY();
 
+        boolean insideLevel = isPointInsideLevel(x, y);
+        if (insideLevel) {
+            // ПКМ
+            if (Mouse.isButtonDown(1)) {
+                if (!isRightButtonPressed) {
+                    mouseXBeforePress = x;
+                    mouseYBeforePress = y;
+                    isRightButtonPressed = true;
+                }
+                return;
+            } else {
+                isRightButtonPressed = false;
+            }
+
+            // ЛКМ
+            if (Mouse.isButtonDown(0)) {
+                if (!isLeftButtonPressed) {
+                    System.out.println("x = " + x + ", y = " + y); // Вывод координат
+                    isLeftButtonPressed = true;
+
+                    // Вывод столбца и строки нажатой ячейки (только в том случае, когда клик был внутри уровня)
+
+                    System.out.println("Нажатая ячейка:");
+                    int row = (int) (height - y - levelYPosition - 1) / 64;
+                    int col = (int) (x - levelXPosition - 1) / 64;
+                    System.out.println("row = " + row);
+                    System.out.println("col = " + col);
+                    System.out.println("Color = " + grounds[level.grounds[row][col]].name);
+                }
+            } else {
+                isLeftButtonPressed = false;
+            }
+        } else {
+            if (!Mouse.isButtonDown(1) && isRightButtonPressed) {
+                isRightButtonPressed = false;
+            }
+        }
+
+        if (isRightButtonPressed || isLeftButtonPressed) {
+            return;
+        }
+
         if (x <= 0 && levelXPosition < MOUSE_OFFSET) {
             levelXPosition += HORIZONTAL_MOUSE_SPEED;
         } else if (x >= width - 1 && levelXPosition > width - levelWidth - MOUSE_OFFSET) {
@@ -132,25 +177,19 @@ public class LoadLevel {
             levelYPosition += VERTICAL_MOUSE_SPEED;
         }
 
-        if (Mouse.isButtonDown(0)) {
-            if (!isLeftButtonPressed) {
-                System.out.println("x = " + x + ", y = " + y); // Вывод координат
-                isLeftButtonPressed = true;
 
-                // Вывод столбца и строки нажатой ячейки (только в том случае, когда клик был внутри уровня)
-                if (height - y >= levelYPosition && height - y <= levelYPosition + levelHeight
-                        && x >= levelXPosition && x <= levelXPosition + levelWidth) {
-                    System.out.println("Нажатая ячейка:");
-                    int row = (int) (height - y - levelYPosition) / 64;
-                    int col = (int) (x - levelXPosition) / 64;
-                    System.out.println("row = " + row);
-                    System.out.println("col = " + col);
-                    System.out.println("Color = " + grounds[level.grounds[row][col]].name);
-                }
-            }
-        } else {
-            isLeftButtonPressed = false;
-        }
+    }
+
+    /**
+     * Проверка, находится ли точка внутри уровня
+     *
+     * @param x
+     * @param y
+     * @return
+     */
+    private static boolean isPointInsideLevel(float x, float y) {
+        return (height - y >= levelYPosition && height - y <= levelYPosition + levelHeight
+                && x >= levelXPosition && x <= levelXPosition + levelWidth);
     }
 
     /**
@@ -212,7 +251,7 @@ public class LoadLevel {
         xstream.alias("row", x.getClass());
         Reader reader = new FileReader("level.xml");
         level = (Level) xstream.fromXML(reader);
-        
+
 
         // Рисование уровня
         framebufferID = glGenFramebuffersEXT();
@@ -342,7 +381,11 @@ public class LoadLevel {
         }
         glEnd();
         glBindTexture(GL_TEXTURE_2D, 0);
-        drawMouse();
+        if (!isRightButtonPressed) {
+            drawMouse();
+        } else {
+            drawPopupWindow("123", mouseXBeforePress, mouseYBeforePress);
+        }
         glDisable(GL_TEXTURE_2D);
         glFlush();
     }
@@ -361,15 +404,66 @@ public class LoadLevel {
             glVertex2f(x, height - (y + size));
         }
         glEnd();
-        
+
         // Затем белый поверх него
         glColor3f(1, 1, 1);
         glBegin(GL_QUADS);
         {
-            glVertex2f(x+1, height - y-1);
-            glVertex2f(x + size-1, height - y-1);
-            glVertex2f(x + size-1, height - (y + size-1));
-            glVertex2f(x+1, height - (y + size-1));
+            glVertex2f(x + 1, height - y - 1);
+            glVertex2f(x + size - 1, height - y - 1);
+            glVertex2f(x + size - 1, height - (y + size - 1));
+            glVertex2f(x + 1, height - (y + size - 1));
+        }
+        glEnd();
+    }
+
+    /**
+     * Нарисовать всплывающее окно
+     *
+     * @param text
+     * @param x
+     * @param y
+     */
+    private static void drawPopupWindow(String text, float x, float y) {
+        final int windowWidth = 100; // Ширина
+        final int windowHeight = 100; // высота
+
+        // Если окно выйдет за границу, то перемещаем его на край границы
+        float levelRight = levelWidth + levelXPosition;
+        if (x + windowWidth > width) {
+            x = width - windowWidth;
+        }
+        if (x + windowWidth > levelRight) {
+            x = levelRight - windowWidth;
+        }
+
+        // Если окно выйдет за границу, то перемещаем его на край границы
+        float levelBottom = height - levelYPosition - levelHeight;
+        if (y - windowHeight < 0) {
+            y = windowHeight;
+        }
+        if (y - windowHeight < levelBottom) {
+            y = windowHeight + levelBottom;
+        }
+
+        glColor3f(0, 0, 0); // сначала чёрный квадрат
+        glBegin(GL_QUADS);
+        {
+            glVertex2f(x, height - y);
+            glVertex2f(x + windowWidth, height - y);
+            glVertex2f(x + windowWidth, height - (y - windowHeight));
+            glVertex2f(x, height - (y - windowHeight));
+        }
+        glEnd();
+
+        // Затем белый поверх него
+        glColor3f(1, 1, 1);
+        glBegin(GL_QUADS);
+        {
+            glVertex2f(x + 1, height - y + 1);
+            glVertex2f(x + windowWidth - 1, height - y + 1);
+            glVertex2f(x + windowWidth - 1, height - (y - windowHeight + 1));
+            glVertex2f(x + 1, height - (y - windowHeight + 1));
         }
         glEnd();
     }

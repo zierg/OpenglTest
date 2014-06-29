@@ -17,7 +17,10 @@ import java.io.IOException;
 import java.io.Reader;
 import org.lwjgl.LWJGLException;
 import org.lwjgl.Sys;
+import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
+import org.lwjgl.openal.AL;
+import org.lwjgl.openal.AL10;
 import org.lwjgl.opengl.Display;
 import org.lwjgl.opengl.DisplayMode;
 import static org.lwjgl.opengl.EXTFramebufferObject.*;
@@ -28,6 +31,9 @@ import org.newdawn.slick.opengl.TextureLoader;
 import org.newdawn.slick.util.ResourceLoader;
 import org.newdawn.slick.UnicodeFont;
 import org.newdawn.slick.font.effects.ColorEffect;
+import org.newdawn.slick.openal.Audio;
+import org.newdawn.slick.openal.AudioLoader;
+import org.newdawn.slick.openal.SoundStore;
 
 /**
  * Класс рисует уровень один раз на текстуру-буфер, затем на каждой итерации
@@ -61,6 +67,7 @@ public class LoadLevel {
                 long time = getTime();
                 if (time - lastTime >= INTERVAL) {
                     listenMouse();
+                    listenKeyboard();
                     lastTime = time;
                 }
             }
@@ -76,7 +83,10 @@ public class LoadLevel {
         }
     }
     //-------------------------------------------------------------------------------------------
-    private static UnicodeFont font;
+    private static Audio oggStream; // Канал ogg-файла
+    private static Audio wavEffect; // Канал wav-файда
+    private static UnicodeFont popupFont;  // Шрифт для всплывающего окна
+    private static UnicodeFont otherFont;  // Другой шрифт
     // Скорость перемещения по уровню при помощи мыши по вертикали/горизонтали
     private static final int VERTICAL_MOUSE_SPEED = 10;
     private static final int HORIZONTAL_MOUSE_SPEED = 10;
@@ -102,13 +112,15 @@ public class LoadLevel {
     public static void main(String[] args) throws IOException {
         //LevelCreator.main(args); // Генерируем случайный уровень.
         initOpenGL();
-        initFont();
+        initFonts();
+        initSound();
         loadGroundTexture();
         loadAndDrawLevel();
         lastFPS = getTime();
         new GameHandler();
         while (!done) {
             render();
+            SoundStore.get().poll(0);
             updateFPS();
             Display.update();
             Display.sync(100);
@@ -118,17 +130,65 @@ public class LoadLevel {
             }
         }
 
+        AL.destroy();
         Display.destroy();
     }
 
-    private static void initFont() {
-        java.awt.Font awtFont = new java.awt.Font("Times New Roman", java.awt.Font.BOLD, 18);
-        font = new UnicodeFont(awtFont);
-        font.addGlyphs("АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯабвгдеёжзийклмнопрстуфхцчшщъыьэюя");
-        font.getEffects().add(new ColorEffect(java.awt.Color.black));
-        font.addAsciiGlyphs();
+    /**
+     * Метод для прослушивания событий клавиатуры (enter, пробел - звуки, escape
+     * - выход)
+     */
+    private static void listenKeyboard() {
+        while (Keyboard.next()) {
+            if (Keyboard.getEventKeyState()) {
+                if (Keyboard.getEventKey() == Keyboard.KEY_RETURN) {
+                    if (oggStream.isPlaying()) {
+                        oggStream.stop();
+                        SoundStore.get().stopSoundEffect(SoundStore.get().getSource(0)); // Без этого останавливает не мгновенно
+                    } else {
+                        oggStream.playAsMusic(1.0f, 0.5f, false);
+                        AL10.alSourcef(SoundStore.get().getSource(0), AL10.AL_GAIN, 0.5f); // 0.5f - громкость
+                    }
+                }
+                if (Keyboard.isKeyDown(Keyboard.KEY_SPACE)) {
+                    wavEffect.playAsSoundEffect(1.0f, 0.3f, false);
+                    AL10.alSourcef(SoundStore.get().getSource(1), AL10.AL_GAIN, 0.3f); // 0.3f - громкость
+                }
+                if (Keyboard.getEventKey() == Keyboard.KEY_ESCAPE) {
+                    done = true;
+                }
+            }
+        }
+    }
+
+    private static void initSound() throws IOException {
+        oggStream = AudioLoader.getStreamingAudio("OGG", ResourceLoader.getResource("resources/09 Blackheart.ogg"));
+        wavEffect = AudioLoader.getAudio("WAV", ResourceLoader.getResourceAsStream("resources/EndOfLevel.wav"));
+    }
+
+    /**
+     * Загрузка шрифтов
+     */
+    private static void initFonts() {
+        java.awt.Font awtFont = new java.awt.Font("Times New Roman", java.awt.Font.BOLD, 43);
+        popupFont = new UnicodeFont(awtFont);
+        popupFont.addGlyphs("АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯабвгдеёжзийклмнопрстуфхцчшщъыьэюя");
+        popupFont.getEffects().add(new ColorEffect(java.awt.Color.black));
+        popupFont.addAsciiGlyphs();
         try {
-            font.loadGlyphs();
+            popupFont.loadGlyphs();
+        } catch (SlickException e) {
+            e.printStackTrace();
+            //cleanUp();
+        }
+
+        java.awt.Font awtFont2 = new java.awt.Font("Times New Roman", java.awt.Font.BOLD, 14);
+        otherFont = new UnicodeFont(awtFont2);
+        otherFont.addGlyphs("АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯабвгдеёжзийклмнопрстуфхцчшщъыьэюя");
+        otherFont.getEffects().add(new ColorEffect(java.awt.Color.red));
+        otherFont.addAsciiGlyphs();
+        try {
+            otherFont.loadGlyphs();
         } catch (SlickException e) {
             e.printStackTrace();
             //cleanUp();
@@ -141,7 +201,6 @@ public class LoadLevel {
     private static void listenMouse() {
         int x = Mouse.getX();
         int y = Mouse.getY();
-
         boolean insideLevel = isPointInsideLevel(x, y);
         if (insideLevel) {
             // ПКМ
@@ -165,7 +224,7 @@ public class LoadLevel {
                     // Вывод столбца и строки нажатой ячейки (только в том случае, когда клик был внутри уровня)
 
                     System.out.println("Нажатая ячейка:");
-                    System.out.println("Color = " + getGroundUnderCursor(x,y).name);
+                    System.out.println("Color = " + getGroundUnderCursor(x, y).name);
                 }
             } else {
                 isLeftButtonPressed = false;
@@ -405,6 +464,8 @@ public class LoadLevel {
         }
         glDisable(GL_TEXTURE_2D);
         glFlush();
+
+        otherFont.drawString(10, 10, "Enter - вкл/выкл музыку,\nпробел - звуковой эффект,\nescape - выход.");
     }
 
     private static void drawMouse() {
@@ -443,8 +504,8 @@ public class LoadLevel {
      */
     private static void drawPopupWindow(String text, float x, float y) {
         final int textPadding = 10;
-        final int windowWidth = font.getWidth(text) + textPadding*2; // Ширина
-        final int windowHeight = font.getLineHeight() + textPadding/3; // высота
+        final int windowWidth = popupFont.getWidth(text) + textPadding * 2; // Ширина
+        final int windowHeight = popupFont.getLineHeight() + textPadding / 3; // высота
 
         // Если окно выйдет за границу, то перемещаем его на край границы
         float levelRight = levelWidth + levelXPosition;
@@ -485,14 +546,15 @@ public class LoadLevel {
         }
         glEnd();
 
-        font.drawString(x + textPadding, height - y, text);
+        popupFont.drawString(x + textPadding, height - y, text);
     }
 
     /**
      * Получить участок земли под координатами x и y
+     *
      * @param x
      * @param y
-     * @return 
+     * @return
      */
     private static Ground getGroundUnderCursor(int x, int y) {
         int row = (int) (height - y - levelYPosition - 1) / 64;

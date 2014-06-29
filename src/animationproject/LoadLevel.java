@@ -22,9 +22,12 @@ import org.lwjgl.opengl.Display;
 import org.lwjgl.opengl.DisplayMode;
 import static org.lwjgl.opengl.EXTFramebufferObject.*;
 import static org.lwjgl.opengl.GL11.*;
+import org.newdawn.slick.SlickException;
 import org.newdawn.slick.opengl.Texture;
 import org.newdawn.slick.opengl.TextureLoader;
 import org.newdawn.slick.util.ResourceLoader;
+import org.newdawn.slick.UnicodeFont;
+import org.newdawn.slick.font.effects.ColorEffect;
 
 /**
  * Класс рисует уровень один раз на текстуру-буфер, затем на каждой итерации
@@ -73,6 +76,7 @@ public class LoadLevel {
         }
     }
     //-------------------------------------------------------------------------------------------
+    private static UnicodeFont font;
     // Скорость перемещения по уровню при помощи мыши по вертикали/горизонтали
     private static final int VERTICAL_MOUSE_SPEED = 10;
     private static final int HORIZONTAL_MOUSE_SPEED = 10;
@@ -98,6 +102,7 @@ public class LoadLevel {
     public static void main(String[] args) throws IOException {
         //LevelCreator.main(args); // Генерируем случайный уровень.
         initOpenGL();
+        initFont();
         loadGroundTexture();
         loadAndDrawLevel();
         lastFPS = getTime();
@@ -114,6 +119,19 @@ public class LoadLevel {
         }
 
         Display.destroy();
+    }
+
+    private static void initFont() {
+        java.awt.Font awtFont = new java.awt.Font("Times New Roman", java.awt.Font.BOLD, 18);
+        font = new UnicodeFont(awtFont);
+        font.getEffects().add(new ColorEffect(java.awt.Color.black));
+        font.addAsciiGlyphs();
+        try {
+            font.loadGlyphs();
+        } catch (SlickException e) {
+            e.printStackTrace();
+            //cleanUp();
+        }
     }
 
     /**
@@ -146,11 +164,7 @@ public class LoadLevel {
                     // Вывод столбца и строки нажатой ячейки (только в том случае, когда клик был внутри уровня)
 
                     System.out.println("Нажатая ячейка:");
-                    int row = (int) (height - y - levelYPosition - 1) / 64;
-                    int col = (int) (x - levelXPosition - 1) / 64;
-                    System.out.println("row = " + row);
-                    System.out.println("col = " + col);
-                    System.out.println("Color = " + grounds[level.grounds[row][col]].name);
+                    System.out.println("Color = " + getGroundUnderCursor(x,y).name);
                 }
             } else {
                 isLeftButtonPressed = false;
@@ -213,6 +227,8 @@ public class LoadLevel {
         glMatrixMode(GL_PROJECTION);								// Select The Projection Matrix
         glLoadIdentity();
         glOrtho(0, width, height, 0, 1, -1);// Reset The Projection Matrix
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         //GLU.gluPerspective(45.0f, 512f / 512f, 1.0f, 100.0f);		// Calculate The Aspect Ratio Of The Window	
         glMatrixMode(GL_MODELVIEW);								// Select The Modelview Matrix
         glLoadIdentity();
@@ -384,7 +400,7 @@ public class LoadLevel {
         if (!isRightButtonPressed) {
             drawMouse();
         } else {
-            drawPopupWindow("123", mouseXBeforePress, mouseYBeforePress);
+            drawPopupWindow(getGroundUnderCursor(mouseXBeforePress, mouseYBeforePress).name, mouseXBeforePress, mouseYBeforePress);
         }
         glDisable(GL_TEXTURE_2D);
         glFlush();
@@ -425,8 +441,9 @@ public class LoadLevel {
      * @param y
      */
     private static void drawPopupWindow(String text, float x, float y) {
-        final int windowWidth = 100; // Ширина
-        final int windowHeight = 100; // высота
+        final int textPadding = 10;
+        final int windowWidth = font.getWidth(text) + textPadding*2; // Ширина
+        final int windowHeight = font.getLineHeight(); // высота
 
         // Если окно выйдет за границу, то перемещаем его на край границы
         float levelRight = levelWidth + levelXPosition;
@@ -466,5 +483,13 @@ public class LoadLevel {
             glVertex2f(x + 1, height - (y - windowHeight + 1));
         }
         glEnd();
+
+        font.drawString(x + textPadding, height - y, text);
+    }
+
+    private static Ground getGroundUnderCursor(int x, int y) {
+        int row = (int) (height - y - levelYPosition - 1) / 64;
+        int col = (int) (x - levelXPosition - 1) / 64;
+        return grounds[level.grounds[row][col]];
     }
 }

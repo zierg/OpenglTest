@@ -87,6 +87,7 @@ public class LoadLevel {
     private static Audio wavEffect; // Канал wav-файда
     private static UnicodeFont popupFont;  // Шрифт для всплывающего окна
     private static UnicodeFont otherFont;  // Другой шрифт
+    private static final int FPS = 100;  // Количество кадров в секунду
     // Скорость перемещения по уровню при помощи мыши по вертикали/горизонтали
     private static final int VERTICAL_MOUSE_SPEED = 10;
     private static final int HORIZONTAL_MOUSE_SPEED = 10;
@@ -96,8 +97,9 @@ public class LoadLevel {
     private static int mouseXBeforePress;
     private static int mouseYBeforePress;
     // Размеры окна
-    private final static int width = 400;
-    private final static int height = 400;
+    private final static int width = Display.getDesktopDisplayMode().getWidth();
+    private final static int height = Display.getDesktopDisplayMode().getHeight();
+    ;
     private static Texture groundsTexture; // Текстура с участками земли
     private static Ground[] grounds; // Массив участков земли
     private static Level level = null; // Уровень.
@@ -123,7 +125,7 @@ public class LoadLevel {
             SoundStore.get().poll(0);
             updateFPS();
             Display.update();
-            Display.sync(100);
+            Display.sync(FPS);
 
             if (Display.isCloseRequested()) {
                 done = true;
@@ -255,6 +257,67 @@ public class LoadLevel {
     }
 
     /**
+     * Set the display mode to be used
+     *
+     * @param width The width of the display required
+     * @param height The height of the display required
+     * @param fullscreen True if we want fullscreen mode
+     */
+    private static void setDisplayMode(int width, int height, boolean fullscreen) {
+
+        // return if requested DisplayMode is already set
+        if ((Display.getDisplayMode().getWidth() == width)
+                && (Display.getDisplayMode().getHeight() == height)
+                && (Display.isFullscreen() == fullscreen)) {
+            return;
+        }
+
+        try {
+            DisplayMode targetDisplayMode = null;
+
+            if (fullscreen) {
+                DisplayMode[] modes = Display.getAvailableDisplayModes();
+                int freq = 0;
+
+                for (int i = 0; i < modes.length; i++) {
+                    DisplayMode current = modes[i];
+
+                    if ((current.getWidth() == width) && (current.getHeight() == height)) {
+                        if ((targetDisplayMode == null) || (current.getFrequency() >= freq)) {
+                            if ((targetDisplayMode == null) || (current.getBitsPerPixel() > targetDisplayMode.getBitsPerPixel())) {
+                                targetDisplayMode = current;
+                                freq = targetDisplayMode.getFrequency();
+                            }
+                        }
+
+                        // if we've found a match for bpp and frequence against the 
+                        // original display mode then it's probably best to go for this one
+                        // since it's most likely compatible with the monitor
+                        if ((current.getBitsPerPixel() == Display.getDesktopDisplayMode().getBitsPerPixel())
+                                && (current.getFrequency() == Display.getDesktopDisplayMode().getFrequency())) {
+                            targetDisplayMode = current;
+                            break;
+                        }
+                    }
+                }
+            } else {
+                targetDisplayMode = new DisplayMode(width, height);
+            }
+
+            if (targetDisplayMode == null) {
+                System.out.println("Failed to find value mode: " + width + "x" + height + " fs=" + fullscreen);
+                return;
+            }
+
+            Display.setDisplayMode(targetDisplayMode);
+            Display.setFullscreen(fullscreen);
+
+        } catch (LWJGLException e) {
+            System.out.println("Unable to setup mode " + width + "x" + height + " fullscreen=" + fullscreen + e);
+        }
+    }
+
+    /**
      * Проверка, находится ли точка внутри уровня
      *
      * @param x
@@ -273,10 +336,13 @@ public class LoadLevel {
      */
     private static void initOpenGL() throws IOException {
         try {
-            DisplayMode displayMode = new DisplayMode(width, height);
-            Display.setDisplayMode(displayMode);
-            Display.setTitle("LoadLevel");
+            //DisplayMode displayMode = new DisplayMode(width, height);
+            //Display.setDisplayMode(displayMode);
+            setDisplayMode(width, height, true);
             Display.create();
+            //Display.setFullscreen(true);
+            //Display.setTitle("LoadLevel");
+
             Display.setVSyncEnabled(false);
         } catch (LWJGLException e) {
             e.printStackTrace();
@@ -465,7 +531,7 @@ public class LoadLevel {
         glDisable(GL_TEXTURE_2D);
         glFlush();
 
-        otherFont.drawString(10, 10, "Enter - вкл/выкл музыку,\nпробел - звуковой эффект,\nescape - выход.");
+        otherFont.drawString(10, 10, "Enter - вкл/выкл музыку,\nпробел - звуковой эффект,\nescape - выход,\nПКМ - всплывающее окно,\nЛКМ - вывод в консоль.");
     }
 
     private static void drawMouse() {

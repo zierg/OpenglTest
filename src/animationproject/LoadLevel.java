@@ -124,6 +124,7 @@ public class LoadLevel {
     private static void initFont() {
         java.awt.Font awtFont = new java.awt.Font("Times New Roman", java.awt.Font.BOLD, 18);
         font = new UnicodeFont(awtFont);
+        font.addGlyphs("АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯабвгдеёжзийклмнопрстуфхцчшщъыьэюя");
         font.getEffects().add(new ColorEffect(java.awt.Color.black));
         font.addAsciiGlyphs();
         try {
@@ -443,7 +444,7 @@ public class LoadLevel {
     private static void drawPopupWindow(String text, float x, float y) {
         final int textPadding = 10;
         final int windowWidth = font.getWidth(text) + textPadding*2; // Ширина
-        final int windowHeight = font.getLineHeight(); // высота
+        final int windowHeight = font.getLineHeight() + textPadding/3; // высота
 
         // Если окно выйдет за границу, то перемещаем его на край границы
         float levelRight = levelWidth + levelXPosition;
@@ -487,6 +488,12 @@ public class LoadLevel {
         font.drawString(x + textPadding, height - y, text);
     }
 
+    /**
+     * Получить участок земли под координатами x и y
+     * @param x
+     * @param y
+     * @return 
+     */
     private static Ground getGroundUnderCursor(int x, int y) {
         int row = (int) (height - y - levelYPosition - 1) / 64;
         int col = (int) (x - levelXPosition - 1) / 64;

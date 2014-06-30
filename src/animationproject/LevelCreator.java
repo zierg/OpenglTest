@@ -16,7 +16,7 @@ import java.io.Writer;
 
 public class LevelCreator {
     
-    final static int SIZE = 128; // Больше 128 пока не хочет, отображает белый экран.
+    final static int SIZE = 20; // Размер уровня не должен превышать 8192*8192 пикселей.
 
     private static final XStream xstream = new XStream(new PureJavaReflectionProvider(), new Dom4JDriver()); 
     // new PureJavaReflectionProvider() - будет использоваться конструктор по умолчанию, чтобы отсутствующие поля 

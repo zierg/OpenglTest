@@ -15,6 +15,8 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
+import java.nio.FloatBuffer;
+import org.lwjgl.BufferUtils;
 import org.lwjgl.LWJGLException;
 import org.lwjgl.Sys;
 import org.lwjgl.input.Keyboard;
@@ -83,23 +85,32 @@ public class LoadLevel {
         }
     }
     //-------------------------------------------------------------------------------------------
+    private static final int GROUND_SIZE = 64; // Размер участка земли
+    private static final int FILE_GROUND_SIZE = 64; // Размер участка земли в файле grounds.png
+
+    // Звуки
     private static Audio oggStream; // Канал ogg-файла
-    private static Audio wavEffect; // Канал wav-файда
+    private static Audio wavEffect; // Канал wav-файла
+    private static Audio groundSound; // Канал wav-файла
+
     private static UnicodeFont popupFont;  // Шрифт для всплывающего окна
     private static UnicodeFont otherFont;  // Другой шрифт
     private static final int FPS = 100;  // Количество кадров в секунду
     // Скорость перемещения по уровню при помощи мыши по вертикали/горизонтали
-    private static final int VERTICAL_MOUSE_SPEED = 10;
-    private static final int HORIZONTAL_MOUSE_SPEED = 10;
+    private static final int VERTICAL_MOUSE_SPEED = 20;
+    private static final int HORIZONTAL_MOUSE_SPEED = 20;
     private static final int MOUSE_OFFSET = 100; // Максимальное смещение "камеры" при достижении края уровня
     private static boolean isLeftButtonPressed = false;
     private static boolean isRightButtonPressed = false;
     private static int mouseXBeforePress;
     private static int mouseYBeforePress;
     // Размеры окна
-    private final static int width = Display.getDesktopDisplayMode().getWidth();
-    private final static int height = Display.getDesktopDisplayMode().getHeight();
-    ;
+    /*private final static int width = Display.getDesktopDisplayMode().getWidth();
+     private final static int height = Display.getDesktopDisplayMode().getHeight();*/
+    private final static int width = 800;
+    private final static int height = 600;
+    private static final boolean fullscreen = false;
+
     private static Texture groundsTexture; // Текстура с участками земли
     private static Ground[] grounds; // Массив участков земли
     private static Level level = null; // Уровень.
@@ -153,8 +164,10 @@ public class LoadLevel {
                     }
                 }
                 if (Keyboard.isKeyDown(Keyboard.KEY_SPACE)) {
-                    wavEffect.playAsSoundEffect(1.0f, 0.3f, false);
+                    wavEffect.playAsSoundEffect(1.0f, 0.3f, false, 2.0f, 0.0f, 0.5f);
                     AL10.alSourcef(SoundStore.get().getSource(1), AL10.AL_GAIN, 0.3f); // 0.3f - громкость
+                    FloatBuffer sourcePos1 = (FloatBuffer) BufferUtils.createFloatBuffer(3).put(new float[]{1.0f, 0.0f, 0.5f}).rewind();
+                    AL10.alSource(SoundStore.get().getSource(1), AL10.AL_POSITION, sourcePos1);
                 }
                 if (Keyboard.getEventKey() == Keyboard.KEY_ESCAPE) {
                     done = true;
@@ -166,6 +179,9 @@ public class LoadLevel {
     private static void initSound() throws IOException {
         oggStream = AudioLoader.getStreamingAudio("OGG", ResourceLoader.getResource("resources/09 Blackheart.ogg"));
         wavEffect = AudioLoader.getAudio("WAV", ResourceLoader.getResourceAsStream("resources/EndOfLevel.wav"));
+        groundSound = AudioLoader.getAudio("WAV", ResourceLoader.getResourceAsStream("ping.wav"));
+
+
     }
 
     /**
@@ -221,10 +237,18 @@ public class LoadLevel {
             if (Mouse.isButtonDown(0)) {
                 if (!isLeftButtonPressed) {
                     System.out.println("x = " + x + ", y = " + y); // Вывод координат
+                    
+                    // Проигрывание звука
+                    final float SCALE = 2; // Домножается на позицию источника звука. Чем больше, тем сильнее смещается звук.
+                    float xSound = ((x - (float) width / 2) / ((float) width / 2)) * SCALE; // Определяем позицию по горизонтали относительно центра.
+                    float ySound = ((y - (float) height / 2) / ((float) height / 2)) * SCALE; // Определяем позицию по вертикали относительно центра.
+                    final float zSound = 0.5f; // по оси Oz
+                    groundSound.playAsSoundEffect(1.0f, 0.3f, false, xSound, ySound, zSound); // Проигрываем звук. Параметры: высота (и скорость), громкость, зацикленность, позиция источника звука
+                    AL10.alSourcef(SoundStore.get().getSource(2), AL10.AL_GAIN, 0.3f); // 0.3f - громкость. без этой строки не работает
+
                     isLeftButtonPressed = true;
 
                     // Вывод столбца и строки нажатой ячейки (только в том случае, когда клик был внутри уровня)
-
                     System.out.println("Нажатая ячейка:");
                     System.out.println("Color = " + getGroundUnderCursor(x, y).name);
                 }
@@ -252,7 +276,6 @@ public class LoadLevel {
         } else if (y >= height - 1 && levelYPosition < MOUSE_OFFSET) {
             levelYPosition += VERTICAL_MOUSE_SPEED;
         }
-
 
     }
 
@@ -338,7 +361,7 @@ public class LoadLevel {
         try {
             //DisplayMode displayMode = new DisplayMode(width, height);
             //Display.setDisplayMode(displayMode);
-            setDisplayMode(width, height, true);
+            setDisplayMode(width, height, fullscreen);
             Display.create();
             //Display.setFullscreen(true);
             //Display.setTitle("LoadLevel");
@@ -394,13 +417,11 @@ public class LoadLevel {
         Reader reader = new FileReader("level.xml");
         level = (Level) xstream.fromXML(reader);
 
-
         // Рисование уровня
         framebufferID = glGenFramebuffersEXT();
         levelTextureID = glGenTextures();												// and a new texture used as a color buffer
         glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, framebufferID); 						// switch to the new framebuffer
 
-        final int GROUND_SIZE = 64; // Размер участка земли
         levelWidth = level.grounds.length * GROUND_SIZE;
         levelHeight = level.grounds.length * GROUND_SIZE;
         // Координаты задаём так, чтобы в середине окна был центр уровня
@@ -460,7 +481,7 @@ public class LoadLevel {
      * @param y координата y
      */
     private static void drawGround(Ground ground, float x, float y) {
-        final int a = groundsTexture.getImageHeight() / 64; // 64 - размер одного участка земли, переменная a - количество участков земли по вериткали (в данном случае и по горизонтали)
+        final int a = groundsTexture.getImageHeight() / FILE_GROUND_SIZE;
         final float varX = 1f / a; // ширина участка земли относительно ширины текстуры
         final float varY = 1f / a; // высота участка земли относительно высоты текстуры
 
@@ -531,7 +552,7 @@ public class LoadLevel {
         glDisable(GL_TEXTURE_2D);
         glFlush();
 
-        otherFont.drawString(10, 10, "Enter - вкл/выкл музыку,\nпробел - звуковой эффект,\nescape - выход,\nПКМ - всплывающее окно,\nЛКМ - вывод в консоль.");
+        otherFont.drawString(10, 10, "Enter - вкл/выкл музыку,\nпробел - звуковой эффект,\nescape - выход,\nПКМ - всплывающее окно,\nЛКМ - тест позиции источника звука\n(зависит от координат курсора).");
     }
 
     private static void drawMouse() {
@@ -623,8 +644,8 @@ public class LoadLevel {
      * @return
      */
     private static Ground getGroundUnderCursor(int x, int y) {
-        int row = (int) (height - y - levelYPosition - 1) / 64;
-        int col = (int) (x - levelXPosition - 1) / 64;
+        int row = (int) (height - y - levelYPosition - 1) / GROUND_SIZE;
+        int col = (int) (x - levelXPosition - 1) / GROUND_SIZE;
         return grounds[level.grounds[row][col]];
     }
 }

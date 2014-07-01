@@ -16,6 +16,8 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
 import java.nio.FloatBuffer;
+import java.util.ArrayList;
+import java.util.List;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.LWJGLException;
 import org.lwjgl.Sys;
@@ -85,6 +87,13 @@ public class LoadLevel {
         }
     }
     //-------------------------------------------------------------------------------------------
+    // Окна
+    private static final List<Window> windowList = new ArrayList<>();
+    private static final int BAR_HEIGHT = 20; // Высота заголовка
+    private static int windowXPosBeforePress;
+    private static int windowYPosBeforePress;
+    private static Window draggingWindow = null; // Перетаскиваемое окно
+        
     private static final int GROUND_SIZE = 64; // Размер участка земли
     private static final int FILE_GROUND_SIZE = 64; // Размер участка земли в файле grounds.png
 
@@ -124,6 +133,14 @@ public class LoadLevel {
 
     public static void main(String[] args) throws IOException {
         //LevelCreator.main(args); // Генерируем случайный уровень.
+        Window window = new Window();
+        window.x = 20;
+        window.y = 20;
+        windowList.add(window);
+        window = new Window(300,50);
+        window.x = 300;
+        window.y = 500;
+        windowList.add(window);
         initOpenGL();
         initFonts();
         initSound();
@@ -181,7 +198,6 @@ public class LoadLevel {
         wavEffect = AudioLoader.getAudio("WAV", ResourceLoader.getResourceAsStream("resources/EndOfLevel.wav"));
         groundSound = AudioLoader.getAudio("WAV", ResourceLoader.getResourceAsStream("ping.wav"));
 
-
     }
 
     /**
@@ -234,26 +250,52 @@ public class LoadLevel {
             }
 
             // ЛКМ
+            Window window = null;
             if (Mouse.isButtonDown(0)) {
-                if (!isLeftButtonPressed) {
-                    System.out.println("x = " + x + ", y = " + y); // Вывод координат
-                    
-                    // Проигрывание звука
-                    final float SCALE = 2; // Домножается на позицию источника звука. Чем больше, тем сильнее смещается звук.
-                    float xSound = ((x - (float) width / 2) / ((float) width / 2)) * SCALE; // Определяем позицию по горизонтали относительно центра.
-                    float ySound = ((y - (float) height / 2) / ((float) height / 2)) * SCALE; // Определяем позицию по вертикали относительно центра.
-                    final float zSound = 0.5f; // по оси Oz
-                    groundSound.playAsSoundEffect(1.0f, 0.3f, false, xSound, ySound, zSound); // Проигрываем звук. Параметры: высота (и скорость), громкость, зацикленность, позиция источника звука
-                    AL10.alSourcef(SoundStore.get().getSource(2), AL10.AL_GAIN, 0.3f); // 0.3f - громкость. без этой строки не работает
+                if (draggingWindow != null) {
+                    draggingWindow.x = windowXPosBeforePress + (x - mouseXBeforePress);
+                    draggingWindow.y = windowYPosBeforePress - (y - mouseYBeforePress);
+                } else {
+                    for (Window w : windowList) {
+                        if (isCursorOnWindow(w, x, y)) {
+                            window = w;
+                        }
+                    }
+                    if (window == null) {
+                        if (!isLeftButtonPressed) {
+                            System.out.println("x = " + x + ", y = " + y); // Вывод координат
 
-                    isLeftButtonPressed = true;
+                            // Проигрывание звука
+                            final float SCALE = 2; // Домножается на позицию источника звука. Чем больше, тем сильнее смещается звук.
+                            float xSound = ((x - (float) width / 2) / ((float) width / 2)) * SCALE; // Определяем позицию по горизонтали относительно центра.
+                            float ySound = ((y - (float) height / 2) / ((float) height / 2)) * SCALE; // Определяем позицию по вертикали относительно центра.
+                            final float zSound = 0.5f; // по оси Oz
+                            groundSound.playAsSoundEffect(1.0f, 0.3f, false, xSound, ySound, zSound); // Проигрываем звук. Параметры: высота (и скорость), громкость, зацикленность, позиция источника звука
+                            AL10.alSourcef(SoundStore.get().getSource(2), AL10.AL_GAIN, 0.3f); // 0.3f - громкость. без этой строки не работает
 
-                    // Вывод столбца и строки нажатой ячейки (только в том случае, когда клик был внутри уровня)
-                    System.out.println("Нажатая ячейка:");
-                    System.out.println("Color = " + getGroundUnderCursor(x, y).name);
+                            isLeftButtonPressed = true;
+
+                            // Вывод столбца и строки нажатой ячейки (только в том случае, когда клик был внутри уровня)
+                            System.out.println("Нажатая ячейка:");
+                            System.out.println("Color = " + getGroundUnderCursor(x, y).name);
+                        }
+                    } else {
+                        if (!isLeftButtonPressed && isCursorOnWindowBar(window, x, y)) {
+                            draggingWindow = window;
+                            mouseXBeforePress = x;
+                            mouseYBeforePress = y;
+                            isLeftButtonPressed = true;
+                            windowXPosBeforePress = window.x;
+                            windowYPosBeforePress = window.y;
+                        } else {
+
+                        }
+                        // обработать нажатие на окно
+                    }
                 }
             } else {
                 isLeftButtonPressed = false;
+                draggingWindow = null;
             }
         } else {
             if (!Mouse.isButtonDown(1) && isRightButtonPressed) {
@@ -544,6 +586,10 @@ public class LoadLevel {
         }
         glEnd();
         glBindTexture(GL_TEXTURE_2D, 0);
+        drawWindows();
+        glBindTexture(GL_TEXTURE_2D, 0);
+        otherFont.drawString(10, 10, "Enter - вкл/выкл музыку,\nпробел - звуковой эффект,\nescape - выход,\nПКМ - всплывающее окно,\nЛКМ - тест позиции источника звука\n(зависит от координат курсора).");
+        glBindTexture(GL_TEXTURE_2D, 0);
         if (!isRightButtonPressed) {
             drawMouse();
         } else {
@@ -552,7 +598,6 @@ public class LoadLevel {
         glDisable(GL_TEXTURE_2D);
         glFlush();
 
-        otherFont.drawString(10, 10, "Enter - вкл/выкл музыку,\nпробел - звуковой эффект,\nescape - выход,\nПКМ - всплывающее окно,\nЛКМ - тест позиции источника звука\n(зависит от координат курсора).");
     }
 
     private static void drawMouse() {
@@ -647,5 +692,86 @@ public class LoadLevel {
         int row = (int) (height - y - levelYPosition - 1) / GROUND_SIZE;
         int col = (int) (x - levelXPosition - 1) / GROUND_SIZE;
         return grounds[level.grounds[row][col]];
+    }
+
+    /**
+     * Рисование всех окон
+     */
+    private static void drawWindows() {
+        for (Window window : windowList) {
+            int x = window.x;
+            int y = window.y;
+            int windowWidth = window.width;
+            int windowHeight = window.height;
+            glColor3f(0, 0, 0); // сначала чёрный квадрат
+            glBegin(GL_QUADS);
+            {
+                glVertex2f(x, y);
+                glVertex2f(x + windowWidth, y);
+                glVertex2f(x + windowWidth, y + windowHeight);
+                glVertex2f(x, (y + windowHeight));
+            }
+            glEnd();
+
+            final int FRAME = 2;
+            // Затем белый поверх него
+            glColor3f(1, 1, 1);
+            glBegin(GL_QUADS);
+            {
+                glVertex2f(x + FRAME, y + FRAME);
+                glVertex2f(x + windowWidth - FRAME, y + FRAME);
+                glVertex2f(x + windowWidth - FRAME, (y + windowHeight - FRAME));
+                glVertex2f(x + FRAME, (y + windowHeight - FRAME));
+            }
+            glEnd();
+
+            glColor3f(0, 0, 0); // сначала чёрный квадрат
+            glBegin(GL_QUADS);
+            {
+                glVertex2f(x, y);
+                glVertex2f(x + windowWidth, y);
+                glVertex2f(x + windowWidth, y + BAR_HEIGHT);
+                glVertex2f(x, (y + BAR_HEIGHT));
+            }
+            glEnd();
+
+            glColor3f(0.5f, 0.5f, 0.5f);
+            glBegin(GL_QUADS);
+            {
+                glVertex2f(x + FRAME, y + FRAME);
+                glVertex2f(x + windowWidth - FRAME, y + FRAME);
+                glVertex2f(x + windowWidth - FRAME, (y + BAR_HEIGHT - FRAME));
+                glVertex2f(x + FRAME, (y + BAR_HEIGHT - FRAME));
+            }
+            glEnd();
+        }
+    }
+
+    /**
+     * Находится ли курсор в окне
+     * @param window
+     * @param x
+     * @param y
+     * @return 
+     */
+    private static boolean isCursorOnWindow(Window window, int x, int y) {
+        boolean onWindow = (height - y >= window.y && height - y <= window.y + window.height
+                && x >= window.x && x <= window.x + window.width);
+        // System.out.println("onWindow = " + onWindow);
+        return onWindow;
+    }
+    
+    /**
+     * Находится ли курсор на заголовке окна
+     * @param window
+     * @param x
+     * @param y
+     * @return 
+     */
+    private static boolean isCursorOnWindowBar(Window window, int x, int y) {
+        boolean onWindow = (height - y >= window.y && height - y <= window.y + BAR_HEIGHT
+                && x >= window.x && x <= window.x + window.width);
+        // System.out.println("onWindow = " + onWindow);
+        return onWindow;
     }
 }

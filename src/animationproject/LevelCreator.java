@@ -16,7 +16,7 @@ import java.io.Writer;
 
 public class LevelCreator {
     
-    final static int SIZE = 20; // Размер уровня не должен превышать 8192*8192 пикселей.
+    final static int SIZE = 256; // Размер уровня не должен превышать 8192*8192 пикселей.
 
     private static final XStream xstream = new XStream(new PureJavaReflectionProvider(), new Dom4JDriver()); 
     // new PureJavaReflectionProvider() - будет использоваться конструктор по умолчанию, чтобы отсутствующие поля 
@@ -39,14 +39,14 @@ public class LevelCreator {
         Level level = new Level();
         level.id = 1;
 
-        int[] x = new int[0];
+        short[] x = new short[0];
         xstream.alias("row", x.getClass());
-        level.grounds = new int[SIZE][SIZE]; // Создание уровня
+        level.grounds = new short[SIZE][SIZE]; // Создание уровня
 
         // Заполнение уровня
-        for (int[] g : level.grounds) {           
+        for (short[] g : level.grounds) {           
             for (int i =0; i < g.length; i++) {
-                g[i] = (int) (Math.random()*16); // 16 - количество участков земли (с 0 по 15)
+                g[i] = (short) (Math.random()*16); // 16 - количество участков земли (с 0 по 15)
                 if (g[i] == 16) {
                     g[i] = 15;
                 }

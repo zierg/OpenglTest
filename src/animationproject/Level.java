@@ -20,5 +20,5 @@ public class Level {
     public int id;
     
     @XStreamAlias("grounds")
-    public int[][] grounds;
+    public short[][] grounds;
 }

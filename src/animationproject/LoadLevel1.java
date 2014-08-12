@@ -45,7 +45,7 @@ import org.newdawn.slick.openal.SoundStore;
  *
  * @author ivko0314
  */
-public class LoadLevel {
+public class LoadLevel1 {
 
     private static boolean done = false;
 
@@ -88,41 +88,41 @@ public class LoadLevel {
     }
     //-------------------------------------------------------------------------------------------
     // Окна
-    private static final List<Window> windowList = new ArrayList<>();
+    /*private static final List<Window> windowList = new ArrayList<>();
     private static final int BAR_HEIGHT = 20; // Высота заголовка
     private static int windowXPosBeforePress;
     private static int windowYPosBeforePress;
-    private static Window draggingWindow = null; // Перетаскиваемое окно
-
-    private static final int GROUND_SIZE = 5; // Размер участка земли
+    private static Window draggingWindow = null; // Перетаскиваемое окно*/
+        
+    private static final int GROUND_SIZE = 32; // Размер участка земли
     private static final int FILE_GROUND_SIZE = 64; // Размер участка земли в файле grounds.png
 
     // Звуки
-    private static Audio oggStream; // Канал ogg-файла
+    /*private static Audio oggStream; // Канал ogg-файла
     private static Audio wavEffect; // Канал wav-файла
     private static Audio groundSound; // Канал wav-файла
 
     private static UnicodeFont popupFont;  // Шрифт для всплывающего окна
-    private static UnicodeFont otherFont;  // Другой шрифт
+    private static UnicodeFont otherFont;  // Другой шрифт*/
     private static final int FPS = 100;  // Количество кадров в секунду
     // Скорость перемещения по уровню при помощи мыши по вертикали/горизонтали
-    private static final int VERTICAL_MOUSE_SPEED = 20;
+    /*private static final int VERTICAL_MOUSE_SPEED = 20;
     private static final int HORIZONTAL_MOUSE_SPEED = 20;
     private static final int MOUSE_OFFSET = 100; // Максимальное смещение "камеры" при достижении края уровня
     private static boolean isLeftButtonPressed = false;
     private static boolean isRightButtonPressed = false;
     private static int mouseXBeforePress;
-    private static int mouseYBeforePress;
+    private static int mouseYBeforePress;*/
     // Размеры окна
     /*private final static int width = Display.getDesktopDisplayMode().getWidth();
      private final static int height = Display.getDesktopDisplayMode().getHeight();*/
-    private final static int width = 512;
+    private final static int width = 800;
     private final static int height = 600;
     private static final boolean fullscreen = false;
 
     private static Texture groundsTexture; // Текстура с участками земли
     private static Ground[] grounds; // Массив участков земли
-    private static Level level = null; // Уровень.
+    //private static Level level = null; // Уровень.
     private static int levelTextureID; // ID для текстуры, куда будет рисоваться уровень.
     private static int framebufferID; // ID буфера, к которому прикрепится текстура уровня.
     // Размеры уровня (в пикселях)
@@ -133,14 +133,14 @@ public class LoadLevel {
 
     public static void main(String[] args) throws IOException {
         //LevelCreator.main(args); // Генерируем случайный уровень.
-        Window window = new Window();
+        /*Window window = new Window();
         window.x = 20;
         window.y = 20;
         windowList.add(window);
-        window = new Window(300, 50);
+        window = new Window(300,50);
         window.x = 300;
         window.y = 500;
-        windowList.add(window);
+        windowList.add(window);*/
         initOpenGL();
         initFonts();
         initSound();
@@ -169,7 +169,7 @@ public class LoadLevel {
      * - выход)
      */
     private static void listenKeyboard() {
-        while (Keyboard.next()) {
+        /*while (Keyboard.next()) {
             if (Keyboard.getEventKeyState()) {
                 if (Keyboard.getEventKey() == Keyboard.KEY_RETURN) {
                     if (oggStream.isPlaying()) {
@@ -190,21 +190,21 @@ public class LoadLevel {
                     done = true;
                 }
             }
-        }
+        }*/
     }
 
     private static void initSound() throws IOException {
-        oggStream = AudioLoader.getStreamingAudio("OGG", ResourceLoader.getResource("resources/09 Blackheart.ogg"));
+        /*oggStream = AudioLoader.getStreamingAudio("OGG", ResourceLoader.getResource("resources/09 Blackheart.ogg"));
         wavEffect = AudioLoader.getAudio("WAV", ResourceLoader.getResourceAsStream("resources/EndOfLevel.wav"));
         groundSound = AudioLoader.getAudio("WAV", ResourceLoader.getResourceAsStream("ping.wav"));
-
+*/
     }
 
     /**
      * Загрузка шрифтов
      */
     private static void initFonts() {
-        java.awt.Font awtFont = new java.awt.Font("Times New Roman", java.awt.Font.BOLD, 43);
+        /*java.awt.Font awtFont = new java.awt.Font("Times New Roman", java.awt.Font.BOLD, 43);
         popupFont = new UnicodeFont(awtFont);
         popupFont.addGlyphs("АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯабвгдеёжзийклмнопрстуфхцчшщъыьэюя");
         popupFont.getEffects().add(new ColorEffect(java.awt.Color.black));
@@ -226,14 +226,14 @@ public class LoadLevel {
         } catch (SlickException e) {
             e.printStackTrace();
             //cleanUp();
-        }
+        }*/
     }
 
     /**
      * Метод для прослушивания событий мыши
      */
     private static void listenMouse() {
-        int x = Mouse.getX();
+        /*int x = Mouse.getX();
         int y = Mouse.getY();
         boolean insideLevel = isPointInsideLevel(x, y);
         if (insideLevel) {
@@ -317,7 +317,7 @@ public class LoadLevel {
             levelYPosition -= VERTICAL_MOUSE_SPEED;
         } else if (y >= height - 1 && levelYPosition < MOUSE_OFFSET) {
             levelYPosition += VERTICAL_MOUSE_SPEED;
-        }
+        }*/
 
     }
 
@@ -389,10 +389,10 @@ public class LoadLevel {
      * @param y
      * @return
      */
-    private static boolean isPointInsideLevel(float x, float y) {
-        return (height - y >= levelYPosition && height - y <= levelYPosition + levelHeight
+    /*private static boolean isPointInsideLevel(float x, float y) {
+        /*return (height - y >= levelYPosition && height - y <= levelYPosition + levelHeight
                 && x >= levelXPosition && x <= levelXPosition + levelWidth);
-    }
+    }*/
 
     /**
      * Инициализация OpenGL
@@ -424,7 +424,7 @@ public class LoadLevel {
         glMatrixMode(GL_MODELVIEW);								// Select The Modelview Matrix
         glLoadIdentity();
 
-        Mouse.setGrabbed(true); // Захватываем мышь.
+        //Mouse.setGrabbed(true); // Захватываем мышь.
 
     }
 
@@ -442,7 +442,6 @@ public class LoadLevel {
         xstream.alias("Grounds", gr.getClass());
         Reader reader = new FileReader("Grounds.xml");
         grounds = (Ground[]) xstream.fromXML(reader);
-        reader.close();
     }
 
     /**
@@ -450,28 +449,23 @@ public class LoadLevel {
      *
      * @throws FileNotFoundException
      */
-    private static void loadAndDrawLevel() throws FileNotFoundException, IOException {
+    private static void loadAndDrawLevel() throws FileNotFoundException {
         // Загрузка уровня
-        XStream xstream = new XStream(new PureJavaReflectionProvider(), new Dom4JDriver());
+        /*XStream xstream = new XStream(new PureJavaReflectionProvider(), new Dom4JDriver());
         // new PureJavaReflectionProvider() - будет использоваться конструктор по умолчанию, чтобы отсутствующие в xml поля не были null
         xstream.processAnnotations(Level.class);
         short[] x = new short[0];
         xstream.alias("row", x.getClass());
         Reader reader = new FileReader("level.xml");
-        level = (Level) xstream.fromXML(reader);
-        reader.close();
-        levelWidth = level.grounds.length * GROUND_SIZE;
-        levelHeight = level.grounds.length * GROUND_SIZE;
-        levelXPosition = width / 2 - levelWidth / 2;
-        levelYPosition = height / 2 - levelHeight / 2;
-        /*
+        level = (Level) xstream.fromXML(reader);*/
+
         // Рисование уровня
         framebufferID = glGenFramebuffersEXT();
         levelTextureID = glGenTextures();												// and a new texture used as a color buffer
         glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, framebufferID); 						// switch to the new framebuffer
 
-        levelWidth = level.grounds.length * GROUND_SIZE;
-        levelHeight = level.grounds.length * GROUND_SIZE;
+        levelWidth = /*level.grounds.length*/256 * GROUND_SIZE;
+        levelHeight = /*level.grounds.length*/256 * GROUND_SIZE;
         // Координаты задаём так, чтобы в середине окна был центр уровня
         levelXPosition = width / 2 - levelWidth / 2;
         levelYPosition = height / 2 - levelHeight / 2;
@@ -501,9 +495,9 @@ public class LoadLevel {
         glScalef(www / w, hhh / h, 1.0f);
 
         // Отрисовка уровня
-        int i = 0;
-        int j = 0;
-        for (short[] col : level.grounds) {
+        /*int i = 0;
+        int j = 0;*/
+        /*for (short[] col : level.grounds) {
             for (short row : col) {
                 Ground ground = grounds[row];
                 drawGround(ground, j * GROUND_SIZE, i * GROUND_SIZE);
@@ -511,14 +505,20 @@ public class LoadLevel {
             }
             i++;
             j = 0;
+        }*/
+        for (int i =0; i < 256; i++) {
+            for (int j = 0; j < 256; j++) {
+                drawGround(grounds[(int)Math.random()*16], j * GROUND_SIZE, i * GROUND_SIZE);
+            }
         }
-        //glScalef(w/www, h/hhh, 1.0f); // Меняем масштаб обратно
+        glScalef(1.0f, 1.0f, 1.0f); // Меняем масштаб обратно
 
         // Отключаем рисование, переключаемся с буфера обратно
-        glDisable(GL_TEXTURE_2D);
+        glDisable(GL_QUADS);
         glBindTexture(GL_TEXTURE_2D, 0);
         glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
-        glViewport(0, 0, width, height);*/
+        glViewport(0, 0, width, height);
+        //org.lwjgl.opengl.EXTFramebufferObject.glDeleteFramebuffersEXT(framebufferID);
     }
 
     /**
@@ -563,60 +563,6 @@ public class LoadLevel {
         glEnd();
     }
 
-    private static void showLevel(Level level, float x, float y) {
-        final int a = groundsTexture.getImageHeight() / FILE_GROUND_SIZE;
-        final float varX = 1f / a; // ширина участка земли относительно ширины текстуры
-        final float varY = 1f / a; // высота участка земли относительно высоты текстуры
-
-
-
-        // Ширина и высота участка земли в пикселях
-        float ww = GROUND_SIZE;
-        float hh = GROUND_SIZE;
-
-        glEnable(GL_TEXTURE_2D);
-        glColor3f(1, 1, 1);
-        glViewport(0, 0, width, height);
-        glBindTexture(GL_TEXTURE_2D, groundsTexture.getTextureID());
-        int i = 0;
-        int j = 0;
-        for (short[] col : level.grounds) {
-            for (short row : col) {
-                float coordX = x + j * GROUND_SIZE;
-                float coordY = y + i * GROUND_SIZE;
-                if (((coordX + GROUND_SIZE < 0)
-                        || (coordX > width)
-                        || (coordY + GROUND_SIZE < 0)
-                        || (coordY > height))) {
-                } else {
-                    Ground ground = grounds[row];
-                    
-                    // Координаты строки и столбца текстуры, в которых находится нужный участок земли 
-                    float rowCoord = varX * (ground.col);
-                    float colCoord = varY * (ground.row);
-                    
-                    glBegin(GL_QUADS);
-                    {
-                        glTexCoord2f(rowCoord, colCoord);
-                        glVertex2f(coordX, coordY);
-                        glTexCoord2f(rowCoord + varX, colCoord);
-                        glVertex2f((coordX + ww), coordY);
-                        glTexCoord2f(rowCoord + varX, colCoord + varY);
-                        glVertex2f((coordX + ww), coordY+hh);
-                        glTexCoord2f(rowCoord, colCoord + varY);
-                        glVertex2f(coordX, coordY+hh);
-                    }
-                    glEnd();
-                }
-                j++;
-            }
-            i++;
-            j = 0;
-        }
-        glDisable(GL_TEXTURE_2D);
-        glBindTexture(GL_TEXTURE_2D, 0);
-    }
-
     /**
      * Отрисовка созданной ранее текстуры с уровнем.
      */
@@ -626,16 +572,27 @@ public class LoadLevel {
         glClearColor(0.0f, 0.0f, 0.0f, 0.5f);
         glClear(GL_COLOR_BUFFER_BIT);			// Clear Screen And Depth Buffer on the framebuffer to black
 
-        //glBindTexture(GL_TEXTURE_2D, levelTextureID);	// переключаемся на созданную ранее текстуру уровня				// bind our FBO texture
+        glBindTexture(GL_TEXTURE_2D, levelTextureID);	// переключаемся на созданную ранее текстуру уровня				// bind our FBO texture
 
         glLoadIdentity();												// Reset The Modelview Matrix
 
         glColor3f(1, 1, 1);												// set the color to white
 
-        showLevel(level, levelXPosition, levelYPosition);
-
+        // Рисуем уровень
+        glBegin(GL_QUADS);
+        {
+            glTexCoord2f(0, 0);
+            glVertex2f(levelXPosition, levelYPosition);
+            glTexCoord2f(1, 0);
+            glVertex2f(levelXPosition + levelWidth, levelYPosition);
+            glTexCoord2f(1, 1);
+            glVertex2f(levelXPosition + levelWidth, levelYPosition + levelHeight);
+            glTexCoord2f(0, 1);
+            glVertex2f(levelXPosition, levelYPosition + levelHeight);
+        }
+        glEnd();
         glBindTexture(GL_TEXTURE_2D, 0);
-        drawWindows();
+        /*drawWindows();
         glBindTexture(GL_TEXTURE_2D, 0);
         otherFont.drawString(10, 10, "Enter - вкл/выкл музыку,\nпробел - звуковой эффект,\nescape - выход,\nПКМ - всплывающее окно,\nЛКМ - тест позиции источника звука\n(зависит от координат курсора).");
         glBindTexture(GL_TEXTURE_2D, 0);
@@ -643,14 +600,14 @@ public class LoadLevel {
             drawMouse();
         } else {
             drawPopupWindow(getGroundUnderCursor(mouseXBeforePress, mouseYBeforePress).name, mouseXBeforePress, mouseYBeforePress);
-        }
+        }*/
         glDisable(GL_TEXTURE_2D);
         glFlush();
 
     }
 
     private static void drawMouse() {
-        final int size = 10;
+        /*final int size = 10;
         int x = Mouse.getX();
         int y = Mouse.getY() - size;
 
@@ -673,7 +630,7 @@ public class LoadLevel {
             glVertex2f(x + size - 1, height - (y + size - 1));
             glVertex2f(x + 1, height - (y + size - 1));
         }
-        glEnd();
+        glEnd();*/
     }
 
     /**
@@ -683,7 +640,7 @@ public class LoadLevel {
      * @param x
      * @param y
      */
-    private static void drawPopupWindow(String text, float x, float y) {
+    /*private static void drawPopupWindow(String text, float x, float y) {
         final int textPadding = 10;
         final int windowWidth = popupFont.getWidth(text) + textPadding * 2; // Ширина
         final int windowHeight = popupFont.getLineHeight() + textPadding / 3; // высота
@@ -728,7 +685,7 @@ public class LoadLevel {
         glEnd();
 
         popupFont.drawString(x + textPadding, height - y, text);
-    }
+    }*/
 
     /**
      * Получить участок земли под координатами x и y
@@ -737,16 +694,16 @@ public class LoadLevel {
      * @param y
      * @return
      */
-    private static Ground getGroundUnderCursor(int x, int y) {
+    /*private static Ground getGroundUnderCursor(int x, int y) {
         int row = (int) (height - y - levelYPosition - 1) / GROUND_SIZE;
         int col = (int) (x - levelXPosition - 1) / GROUND_SIZE;
         return grounds[level.grounds[row][col]];
-    }
+    }*/
 
     /**
      * Рисование всех окон
      */
-    private static void drawWindows() {
+    /*private static void drawWindows() {
         for (Window window : windowList) {
             int x = window.x;
             int y = window.y;
@@ -794,35 +751,33 @@ public class LoadLevel {
             }
             glEnd();
         }
-    }
+    }*/
 
     /**
      * Находится ли курсор в окне
-     *
      * @param window
      * @param x
      * @param y
-     * @return
+     * @return 
      */
-    private static boolean isCursorOnWindow(Window window, int x, int y) {
+    /*private static boolean isCursorOnWindow(Window window, int x, int y) {
         boolean onWindow = (height - y >= window.y && height - y <= window.y + window.height
                 && x >= window.x && x <= window.x + window.width);
         // System.out.println("onWindow = " + onWindow);
         return onWindow;
-    }
-
+    }*/
+    
     /**
      * Находится ли курсор на заголовке окна
-     *
      * @param window
      * @param x
      * @param y
-     * @return
+     * @return 
      */
-    private static boolean isCursorOnWindowBar(Window window, int x, int y) {
+    /*private static boolean isCursorOnWindowBar(Window window, int x, int y) {
         boolean onWindow = (height - y >= window.y && height - y <= window.y + BAR_HEIGHT
                 && x >= window.x && x <= window.x + window.width);
         // System.out.println("onWindow = " + onWindow);
         return onWindow;
-    }
+    }*/
 }

@@ -54,7 +54,7 @@ public class TextureAtlasTest {
         xstream.alias("Grounds", gr.getClass());
         Reader reader = new FileReader("Grounds.xml");
         gr = (Ground[]) xstream.fromXML(reader);
-        int[] x = new int[0];
+        short[] x = new short[0];
         
         // Читаем файл с уровнем
         xstream.alias("row", x.getClass());
@@ -67,8 +67,8 @@ public class TextureAtlasTest {
 
             int i = 0;
             int j = 0;
-            for (int[] col : level.grounds) {
-                for (int row : col) {
+            for (short[] col : level.grounds) {
+                for (short row : col) {
                     Ground ground = gr[row];
                     drawGround(ground, j * 64, i * 64);
                     j++;

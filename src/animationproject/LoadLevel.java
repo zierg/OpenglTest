@@ -94,7 +94,7 @@ public class LoadLevel {
     private static int windowYPosBeforePress;
     private static Window draggingWindow = null; // Перетаскиваемое окно
 
-    private static final int GROUND_SIZE = 5; // Размер участка земли
+    private static /*final*/ int GROUND_SIZE = 32; // Размер участка земли
     private static final int FILE_GROUND_SIZE = 64; // Размер участка земли в файле grounds.png
 
     // Звуки
@@ -116,15 +116,13 @@ public class LoadLevel {
     // Размеры окна
     /*private final static int width = Display.getDesktopDisplayMode().getWidth();
      private final static int height = Display.getDesktopDisplayMode().getHeight();*/
-    private final static int width = 512;
+    private final static int width = 800;
     private final static int height = 600;
     private static final boolean fullscreen = false;
 
     private static Texture groundsTexture; // Текстура с участками земли
     private static Ground[] grounds; // Массив участков земли
     private static Level level = null; // Уровень.
-    private static int levelTextureID; // ID для текстуры, куда будет рисоваться уровень.
-    private static int framebufferID; // ID буфера, к которому прикрепится текстура уровня.
     // Размеры уровня (в пикселях)
     private static int levelWidth;
     private static int levelHeight;
@@ -237,6 +235,31 @@ public class LoadLevel {
         int y = Mouse.getY();
         boolean insideLevel = isPointInsideLevel(x, y);
         if (insideLevel) {
+            { // Колёсико
+                int dWheel = Mouse.getDWheel();
+                if (dWheel != 0) {
+                    float row =  getRowUnderCursor(x,y);
+                    float col =  getColumnUnderCursor(x, y);
+                    final int WHEEL_SPEED = 4;
+                    if (dWheel < 0) {
+                        if (GROUND_SIZE > 8) {
+                            GROUND_SIZE -= WHEEL_SPEED;
+
+                        }
+                    } else if (dWheel > 0) {
+                        if (GROUND_SIZE < 64) {
+                            GROUND_SIZE += WHEEL_SPEED;
+
+                        }
+                    }
+                    
+                    levelWidth = level.grounds.length * GROUND_SIZE;
+                    levelHeight = level.grounds.length * GROUND_SIZE;
+                    
+                    levelXPosition = (int) (-col * GROUND_SIZE + x);
+                    levelYPosition = (int) (height - row * GROUND_SIZE - y);
+                }
+            }
             // ПКМ
             if (Mouse.isButtonDown(1)) {
                 if (!isRightButtonPressed) {
@@ -464,61 +487,6 @@ public class LoadLevel {
         levelHeight = level.grounds.length * GROUND_SIZE;
         levelXPosition = width / 2 - levelWidth / 2;
         levelYPosition = height / 2 - levelHeight / 2;
-        /*
-        // Рисование уровня
-        framebufferID = glGenFramebuffersEXT();
-        levelTextureID = glGenTextures();												// and a new texture used as a color buffer
-        glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, framebufferID); 						// switch to the new framebuffer
-
-        levelWidth = level.grounds.length * GROUND_SIZE;
-        levelHeight = level.grounds.length * GROUND_SIZE;
-        // Координаты задаём так, чтобы в середине окна был центр уровня
-        levelXPosition = width / 2 - levelWidth / 2;
-        levelYPosition = height / 2 - levelHeight / 2;
-
-// initialize color texture
-        glBindTexture(GL_TEXTURE_2D, levelTextureID);									// Bind the colorbuffer texture
-        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);				// make it linear filterd
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, levelWidth, levelHeight, 0, GL_RGBA, GL_INT, (java.nio.ByteBuffer) null);	// Create the texture data
-        glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, levelTextureID, 0); // attach it to the framebuffer
-
-        glViewport(0, 0, levelWidth, levelHeight);
-        glClearColor(0.5f, 0.5f, 0.5f, 1.0f); // Фоновый серый цвет. Для теста, полностью ли текстура заполняется уровнем (если нет, будет виден фон)
-        glClear(GL_COLOR_BUFFER_BIT);			// Clear Screen And Depth Buffer on the fbo to red
-        glLoadIdentity();
-
-        glEnable(GL_TEXTURE_2D);
-        glColor3f(1, 1, 1);
-
-        glBindTexture(GL_TEXTURE_2D, groundsTexture.getTextureID()); // Закрепляем текстуру с участками земли
-        glViewport(0, 0, levelWidth, levelHeight); // Переключаемся на размеры уровня (иначе всё, что по координатам не входит в размер окна, не отрисуется на текстуре)
-
-        // Устанавливаем масштаб, чтобы участки рисовались в полный размер.
-        float w = levelWidth;
-        float www = width;
-        float h = levelHeight;
-        float hhh = height;
-        glScalef(www / w, hhh / h, 1.0f);
-
-        // Отрисовка уровня
-        int i = 0;
-        int j = 0;
-        for (short[] col : level.grounds) {
-            for (short row : col) {
-                Ground ground = grounds[row];
-                drawGround(ground, j * GROUND_SIZE, i * GROUND_SIZE);
-                j++;
-            }
-            i++;
-            j = 0;
-        }
-        //glScalef(w/www, h/hhh, 1.0f); // Меняем масштаб обратно
-
-        // Отключаем рисование, переключаемся с буфера обратно
-        glDisable(GL_TEXTURE_2D);
-        glBindTexture(GL_TEXTURE_2D, 0);
-        glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
-        glViewport(0, 0, width, height);*/
     }
 
     /**
@@ -568,8 +536,6 @@ public class LoadLevel {
         final float varX = 1f / a; // ширина участка земли относительно ширины текстуры
         final float varY = 1f / a; // высота участка земли относительно высоты текстуры
 
-
-
         // Ширина и высота участка земли в пикселях
         float ww = GROUND_SIZE;
         float hh = GROUND_SIZE;
@@ -590,11 +556,11 @@ public class LoadLevel {
                         || (coordY > height))) {
                 } else {
                     Ground ground = grounds[row];
-                    
+
                     // Координаты строки и столбца текстуры, в которых находится нужный участок земли 
                     float rowCoord = varX * (ground.col);
                     float colCoord = varY * (ground.row);
-                    
+
                     glBegin(GL_QUADS);
                     {
                         glTexCoord2f(rowCoord, colCoord);
@@ -602,9 +568,9 @@ public class LoadLevel {
                         glTexCoord2f(rowCoord + varX, colCoord);
                         glVertex2f((coordX + ww), coordY);
                         glTexCoord2f(rowCoord + varX, colCoord + varY);
-                        glVertex2f((coordX + ww), coordY+hh);
+                        glVertex2f((coordX + ww), coordY + hh);
                         glTexCoord2f(rowCoord, colCoord + varY);
-                        glVertex2f(coordX, coordY+hh);
+                        glVertex2f(coordX, coordY + hh);
                     }
                     glEnd();
                 }
@@ -627,7 +593,6 @@ public class LoadLevel {
         glClear(GL_COLOR_BUFFER_BIT);			// Clear Screen And Depth Buffer on the framebuffer to black
 
         //glBindTexture(GL_TEXTURE_2D, levelTextureID);	// переключаемся на созданную ранее текстуру уровня				// bind our FBO texture
-
         glLoadIdentity();												// Reset The Modelview Matrix
 
         glColor3f(1, 1, 1);												// set the color to white
@@ -738,9 +703,17 @@ public class LoadLevel {
      * @return
      */
     private static Ground getGroundUnderCursor(int x, int y) {
-        int row = (int) (height - y - levelYPosition - 1) / GROUND_SIZE;
-        int col = (int) (x - levelXPosition - 1) / GROUND_SIZE;
+        int row = (int) (getRowUnderCursor(x, y) - 1f/ GROUND_SIZE);
+        int col = (int) (getColumnUnderCursor(x, y) - 1f/ GROUND_SIZE);
         return grounds[level.grounds[row][col]];
+    }
+    
+    private static float getRowUnderCursor(int x, int y) {
+        return (height - y - levelYPosition) / GROUND_SIZE;
+    }
+    
+    private static float getColumnUnderCursor(int x, int y) {
+        return (x - levelXPosition) / GROUND_SIZE;
     }
 
     /**

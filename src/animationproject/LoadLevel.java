@@ -95,7 +95,7 @@ public class LoadLevel {
     private static Window draggingWindow = null; // Перетаскиваемое окно
 
     private static /*final*/ int GROUND_SIZE = 32; // Размер участка земли
-    private static final int FILE_GROUND_SIZE = 64; // Размер участка земли в файле grounds.png
+    private static final int FILE_GROUND_SIZE = 128; // Размер участка земли в файле grounds.png
 
     // Звуки
     private static Audio oggStream; // Канал ogg-файла
@@ -131,9 +131,9 @@ public class LoadLevel {
 
     public static void main(String[] args) throws IOException {
         //LevelCreator.main(args); // Генерируем случайный уровень.
-        Window window = new Window();
-        window.x = 20;
-        window.y = 20;
+        Window window = new Window(250,150);
+        window.x = 0;
+        window.y = -10;
         windowList.add(window);
         window = new Window(300, 50);
         window.x = 300;
@@ -238,24 +238,33 @@ public class LoadLevel {
             { // Колёсико
                 int dWheel = Mouse.getDWheel();
                 if (dWheel != 0) {
-                    float row =  getRowUnderCursor(x,y);
-                    float col =  getColumnUnderCursor(x, y);
-                    final int WHEEL_SPEED = 4;
+                    float row = getRowUnderCursor(x, y);
+                    float col = getColumnUnderCursor(x, y);
+                    final float WHEEL_SPEED = 1.2f;
+                    float gs = GROUND_SIZE;
+                    final int MIN_SIZE = 8;
                     if (dWheel < 0) {
-                        if (GROUND_SIZE > 8) {
-                            GROUND_SIZE -= WHEEL_SPEED;
-
+                        if (GROUND_SIZE > MIN_SIZE) {
+                            GROUND_SIZE = (int) (gs / WHEEL_SPEED);
+                            if (GROUND_SIZE < MIN_SIZE) {
+                                GROUND_SIZE = MIN_SIZE;
+                            }
                         }
                     } else if (dWheel > 0) {
-                        if (GROUND_SIZE < 64) {
-                            GROUND_SIZE += WHEEL_SPEED;
-
+                        if (GROUND_SIZE < FILE_GROUND_SIZE) {
+                            GROUND_SIZE = (int) (gs * WHEEL_SPEED);
+                            if (GROUND_SIZE == (int) gs) {
+                                GROUND_SIZE++;
+                            }
+                            if (GROUND_SIZE > FILE_GROUND_SIZE) {
+                                GROUND_SIZE = FILE_GROUND_SIZE;
+                            }
                         }
                     }
-                    
+
                     levelWidth = level.grounds.length * GROUND_SIZE;
                     levelHeight = level.grounds.length * GROUND_SIZE;
-                    
+
                     levelXPosition = (int) (-col * GROUND_SIZE + x);
                     levelYPosition = (int) (height - row * GROUND_SIZE - y);
                 }
@@ -602,7 +611,7 @@ public class LoadLevel {
         glBindTexture(GL_TEXTURE_2D, 0);
         drawWindows();
         glBindTexture(GL_TEXTURE_2D, 0);
-        otherFont.drawString(10, 10, "Enter - вкл/выкл музыку,\nпробел - звуковой эффект,\nescape - выход,\nПКМ - всплывающее окно,\nЛКМ - тест позиции источника звука\n(зависит от координат курсора).");
+        otherFont.drawString(10, 10, "Enter - вкл/выкл музыку,\nпробел - звуковой эффект,\nescape - выход,\nПКМ - всплывающее окно,\nЛКМ - тест позиции источника звука\n(зависит от координат курсора),\nКолёсико - изменение масштаба.");
         glBindTexture(GL_TEXTURE_2D, 0);
         if (!isRightButtonPressed) {
             drawMouse();
@@ -703,15 +712,15 @@ public class LoadLevel {
      * @return
      */
     private static Ground getGroundUnderCursor(int x, int y) {
-        int row = (int) (getRowUnderCursor(x, y) - 1f/ GROUND_SIZE);
-        int col = (int) (getColumnUnderCursor(x, y) - 1f/ GROUND_SIZE);
+        int row = (int) (getRowUnderCursor(x, y) - 1f / GROUND_SIZE);
+        int col = (int) (getColumnUnderCursor(x, y) - 1f / GROUND_SIZE);
         return grounds[level.grounds[row][col]];
     }
-    
+
     private static float getRowUnderCursor(int x, int y) {
         return (height - y - levelYPosition) / GROUND_SIZE;
     }
-    
+
     private static float getColumnUnderCursor(int x, int y) {
         return (x - levelXPosition) / GROUND_SIZE;
     }

@@ -27,7 +27,6 @@ import org.lwjgl.openal.AL;
 import org.lwjgl.openal.AL10;
 import org.lwjgl.opengl.Display;
 import org.lwjgl.opengl.DisplayMode;
-import static org.lwjgl.opengl.EXTFramebufferObject.*;
 import static org.lwjgl.opengl.GL11.*;
 import org.newdawn.slick.SlickException;
 import org.newdawn.slick.opengl.Texture;
@@ -70,6 +69,7 @@ public class LoadLevel {
             while (!done) {
                 long time = getTime();
                 if (time - lastTime >= INTERVAL) {
+                    makeGameChanges();
                     listenMouse();
                     listenKeyboard();
                     lastTime = time;
@@ -129,9 +129,18 @@ public class LoadLevel {
     private static float levelXPosition;
     private static float levelYPosition;
 
+    // Персонаж
+    private static int characterColumn;
+    private static int characterRow;
+    private static float characterOffsetX;
+    private static float characterOffsetY;
+    private static int characterGoalColumn;
+    private static int characterGoalRow;
+    private static final float CHARACTER_SPEED = 0.05f;
+
     public static void main(String[] args) throws Exception {
         //LevelCreator.main(args); // Генерируем случайный уровень.
-        Window window = new Window(250,150);
+        Window window = new Window(250, 150);
         window.x = 0;
         window.y = -10;
         windowList.add(window);
@@ -227,6 +236,40 @@ public class LoadLevel {
         }
     }
 
+    private static void makeGameChanges() {
+        if (characterColumn != characterGoalColumn) {
+            float direction = ((characterGoalColumn < characterColumn) ? -1f : 1f);
+            characterOffsetX += direction * CHARACTER_SPEED * GROUND_SIZE;
+            if (Math.abs(characterOffsetX) >= GROUND_SIZE) {
+                characterColumn += direction;
+                characterOffsetX -= GROUND_SIZE * direction;
+            }
+        } else if (characterOffsetX != 0) {
+            float oldOffset = characterOffsetX;
+            float direction = ((characterOffsetX > 0) ? -1f : 1f);
+            characterOffsetX += direction * CHARACTER_SPEED * GROUND_SIZE;
+            if (Math.abs(oldOffset) + Math.abs(characterOffsetX) > Math.abs(oldOffset+characterOffsetX)) {
+                characterOffsetX = 0;
+            }
+        }
+        
+        if (characterRow != characterGoalRow) {
+            float direction = ((characterGoalRow < characterRow) ? -1f : 1f);
+            characterOffsetY += direction * CHARACTER_SPEED * GROUND_SIZE;
+            if (Math.abs(characterOffsetY) >= GROUND_SIZE) {
+                characterRow += direction;
+                characterOffsetY -= GROUND_SIZE * direction;
+            }
+        } else if (characterOffsetY != 0) {
+            float oldOffset = characterOffsetY;
+            float direction = ((characterOffsetY > 0) ? -1f : 1f);
+            characterOffsetY += direction * CHARACTER_SPEED * GROUND_SIZE;
+            if (Math.abs(oldOffset) + Math.abs(characterOffsetY) > Math.abs(oldOffset+characterOffsetY)) {
+                characterOffsetY = 0;
+            }
+        }
+    }
+
     /**
      * Метод для прослушивания событий мыши
      */
@@ -307,8 +350,10 @@ public class LoadLevel {
                             isLeftButtonPressed = true;
 
                             // Вывод столбца и строки нажатой ячейки (только в том случае, когда клик был внутри уровня)
-                            System.out.println("Нажатая ячейка:");
+                            System.out.println("Нажатая ячейка: " + getGroundRowUnderCursor(x, y) + ", " + getGroundColumnUnderCursor(x, y));
                             System.out.println("Color = " + getGroundUnderCursor(x, y).name);
+                            characterGoalColumn = getGroundColumnUnderCursor(x, y);
+                            characterGoalRow = getGroundRowUnderCursor(x, y);
                         }
                     } else {
                         if (!isLeftButtonPressed && isCursorOnWindowBar(window, x, y)) {
@@ -483,38 +528,13 @@ public class LoadLevel {
      */
     private static void loadAndDrawLevel() throws FileNotFoundException, IOException, Exception {
         // Загрузка уровня
-        /*XStream xstream = new XStream(new PureJavaReflectionProvider(), new Dom4JDriver());
-        // new PureJavaReflectionProvider() - будет использоваться конструктор по умолчанию, чтобы отсутствующие в xml поля не были null
-        xstream.processAnnotations(Level.class);
-        short[] x = new short[0];
-        xstream.alias("row", x.getClass());
-        Reader reader = new FileReader("level.xml");
-        level = (Level) xstream.fromXML(reader);
-        reader.close();
-        xstream = null;
-        reader = null;
-        System.gc();*/
-        /*level = new Level();
-        level.id = 1;
 
-
-        level.grounds = new short[256][256]; // Создание уровня
-
-        // Заполнение уровня
-        for (short[] g : level.grounds) {           
-            for (int i =0; i < g.length; i++) {
-                g[i] = (short) (Math.random()*16); // 16 - количество участков земли (с 0 по 15)
-                if (g[i] == 16) {
-                    g[i] = 15;
-                }
-            }
-        }*/
         level = LevelCreator.readLevel("level.ini");
         resetLevelSize();
         levelXPosition = width / 2 - levelWidth / 2;
         levelYPosition = height / 2 - levelHeight / 2;
     }
-    
+
     private static void resetLevelSize() {
         levelWidth = level.grounds[0].length * GROUND_SIZE;
         levelHeight = level.grounds.length * GROUND_SIZE;
@@ -612,6 +632,7 @@ public class LoadLevel {
         }
         glDisable(GL_TEXTURE_2D);
         glBindTexture(GL_TEXTURE_2D, 0);
+        drawCharacter();
     }
 
     /**
@@ -623,7 +644,6 @@ public class LoadLevel {
         glClearColor(0.0f, 0.0f, 0.0f, 0.5f);
         glClear(GL_COLOR_BUFFER_BIT);			// Clear Screen And Depth Buffer on the framebuffer to black
 
-        //glBindTexture(GL_TEXTURE_2D, levelTextureID);	// переключаемся на созданную ранее текстуру уровня				// bind our FBO texture
         glLoadIdentity();												// Reset The Modelview Matrix
 
         glColor3f(1, 1, 1);												// set the color to white
@@ -734,8 +754,8 @@ public class LoadLevel {
      * @return
      */
     private static Ground getGroundUnderCursor(int x, int y) {
-        int row = (int) (getRowUnderCursor(x, y) - 1f / GROUND_SIZE);
-        int col = (int) (getColumnUnderCursor(x, y) - 1f / GROUND_SIZE);
+        int row = getGroundRowUnderCursor(x, y);
+        int col = getGroundColumnUnderCursor(x, y);
         return grounds[level.grounds[row][col]];
     }
 
@@ -745,6 +765,14 @@ public class LoadLevel {
 
     private static float getColumnUnderCursor(int x, int y) {
         return (x - levelXPosition) / GROUND_SIZE;
+    }
+
+    private static int getGroundRowUnderCursor(int x, int y) {
+        return (int) (getRowUnderCursor(x, y) - 1f / GROUND_SIZE);
+    }
+
+    private static int getGroundColumnUnderCursor(int x, int y) {
+        return (int) (getColumnUnderCursor(x, y) - 1f / GROUND_SIZE);
     }
 
     /**
@@ -828,5 +856,33 @@ public class LoadLevel {
                 && x >= window.x && x <= window.x + window.width);
         // System.out.println("onWindow = " + onWindow);
         return onWindow;
+    }
+
+    private static void drawCharacter() {
+        glBindTexture(GL_TEXTURE_2D, 0);
+        final int size = GROUND_SIZE;
+        float x = characterColumn * GROUND_SIZE + characterOffsetX + levelXPosition;
+        float y = characterRow * GROUND_SIZE + characterOffsetY + levelYPosition;
+
+        glColor3f(1, 1, 1);
+        glBegin(GL_QUADS);
+        {
+            glVertex2f(x, y);
+            glVertex2f(x + size, y);
+            glVertex2f(x + size, (y + size));
+            glVertex2f(x, (y + size));
+        }
+        glEnd();
+
+        final float BORDER = (float) GROUND_SIZE / 6f;
+        glColor3f(0, 0, 0);
+        glBegin(GL_QUADS);
+        {
+            glVertex2f(x + BORDER, y + BORDER);
+            glVertex2f(x + size - BORDER, y + BORDER);
+            glVertex2f(x + size - BORDER, (y + size - BORDER));
+            glVertex2f(x + BORDER, (y + size - BORDER));
+        }
+        glEnd();
     }
 }

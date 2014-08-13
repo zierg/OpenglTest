@@ -129,7 +129,7 @@ public class LoadLevel {
     private static float levelXPosition;
     private static float levelYPosition;
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws Exception {
         //LevelCreator.main(args); // Генерируем случайный уровень.
         Window window = new Window(250,150);
         window.x = 0;
@@ -262,8 +262,7 @@ public class LoadLevel {
                         }
                     }
 
-                    levelWidth = level.grounds.length * GROUND_SIZE;
-                    levelHeight = level.grounds.length * GROUND_SIZE;
+                    resetLevelSize();
 
                     levelXPosition = (int) (-col * GROUND_SIZE + x);
                     levelYPosition = (int) (height - row * GROUND_SIZE - y);
@@ -482,9 +481,9 @@ public class LoadLevel {
      *
      * @throws FileNotFoundException
      */
-    private static void loadAndDrawLevel() throws FileNotFoundException, IOException {
+    private static void loadAndDrawLevel() throws FileNotFoundException, IOException, Exception {
         // Загрузка уровня
-        XStream xstream = new XStream(new PureJavaReflectionProvider(), new Dom4JDriver());
+        /*XStream xstream = new XStream(new PureJavaReflectionProvider(), new Dom4JDriver());
         // new PureJavaReflectionProvider() - будет использоваться конструктор по умолчанию, чтобы отсутствующие в xml поля не были null
         xstream.processAnnotations(Level.class);
         short[] x = new short[0];
@@ -492,10 +491,33 @@ public class LoadLevel {
         Reader reader = new FileReader("level.xml");
         level = (Level) xstream.fromXML(reader);
         reader.close();
-        levelWidth = level.grounds.length * GROUND_SIZE;
-        levelHeight = level.grounds.length * GROUND_SIZE;
+        xstream = null;
+        reader = null;
+        System.gc();*/
+        /*level = new Level();
+        level.id = 1;
+
+
+        level.grounds = new short[256][256]; // Создание уровня
+
+        // Заполнение уровня
+        for (short[] g : level.grounds) {           
+            for (int i =0; i < g.length; i++) {
+                g[i] = (short) (Math.random()*16); // 16 - количество участков земли (с 0 по 15)
+                if (g[i] == 16) {
+                    g[i] = 15;
+                }
+            }
+        }*/
+        level = LevelCreator.readLevel("level.ini");
+        resetLevelSize();
         levelXPosition = width / 2 - levelWidth / 2;
         levelYPosition = height / 2 - levelHeight / 2;
+    }
+    
+    private static void resetLevelSize() {
+        levelWidth = level.grounds[0].length * GROUND_SIZE;
+        levelHeight = level.grounds.length * GROUND_SIZE;
     }
 
     /**
